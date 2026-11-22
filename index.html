@@ -713,7 +713,12 @@ function bkUpdate() {
     c.toggle('bk', show);
   } catch (e) {}
 }
-$('hbkb').onclick = function (e) { e.preventDefault(); if (document.documentElement.classList.contains('im')) { modeSet('hm'); return; } showScreen(''); };
+function goHome() {
+  /* 「← 戻る」の動作は、これ1つ（5つの画面すべて共通）：どの画面からでも、必ず、司令室へ戻る */
+  if (document.documentElement.classList.contains('im')) modeSet('hm');
+  showScreen('');
+}
+$('hbkb').onclick = function (e) { e.preventDefault(); goHome(); };
 function homeWire() {
   try {
     var f = $('hf'), d = f.contentDocument; if (!d || !d.body || !d.querySelector('.screen')) return;
@@ -804,11 +809,11 @@ function syncInit() {
     });
   });
 }
-$('ibk').onclick = function (e) { e.preventDefault(); modeSet('hm'); };
+$('ibk').onclick = function (e) { e.preventDefault(); goHome(); };
 $('sybtn').onclick = function () { $('syf').click(); };
 $('syf').onchange = function () { var f = $('syf').files && $('syf').files[0]; if (!f) return; var r = new FileReader(); r.onload = function () { syncSetKey(String(r.result || '')); }; r.readAsText(f); $('syf').value = ''; };
 $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っていません', 1); return; } syncCheck(true); };
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V8</div></body></html>
+</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V9</div></body></html>
