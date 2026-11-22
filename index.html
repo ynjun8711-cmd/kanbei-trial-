@@ -693,7 +693,7 @@ var LIVE_CSS = '.kb-live{border:1.5px solid rgba(255,211,79,.85);border-radius:1
 function liveStats() {
   var d = today(), l = entries(d).filter(function (e) { return !e.deleted; }), o = { date: d, rows: l, go: 0, te: 0, id: 0, ia: 0, tot: 0, cool: [0, 1, 2, 3].map(function () { return { n: 0, s: 0, i: 0 }; }) };
   l.forEach(function (e) {
-    o.tot += e.fare; var c = coolOf(bizMin(rideTime(e).t)); c = (c >= 0 && c <= 3) ? c : 0;
+    o.tot += e.fare; var m = bizMin(rideTime(e).t); if (m === null) m = bizMin(e.at); var c = m === null ? 0 : coolOf(m); c = (c >= 0 && c <= 3) ? c : 0;
     if (e.kind === 'go') { o.go++; o.cool[c].n++; o.cool[c].s += e.fare; } else if (e.kind === 'teage') { o.te++; o.cool[c].n++; o.cool[c].s += e.fare; } else { o.id++; o.ia += e.fare; o.cool[c].i++; }
   });
   o.r = o.go + o.te; o.est = Math.round(o.tot / TAX) - o.ia; o.df = o.est - G; o.pct = Math.round(o.est / G * 1000) / 10;
@@ -703,14 +703,14 @@ function liveHtml(kindKey) {
   var o = liveStats(), h = '<h3>' + (kindKey === 'list' ? '本日の入力（iPhone・暫定）' : (kindKey === 'cool' ? '本日のクール別（iPhone・暫定）' : '本日の営業（iPhone・暫定）')) + '</h3>';
   function kv(a, b, c) { return '<div class="kv"><span>' + a + '</span><b' + (c ? ' class="' + c + '"' : '') + '>' + b + '</b></div>'; }
   if (kindKey === 'sum') {
-    h += kv('税込累計', yen(o.tot) + '円') + kv('概算の税抜営収', '約' + yen(o.est) + '円') + kv('乗車回数（空転を除く）', o.r + '回') + kv('GO無線／手上げ', o.go + '件／' + o.te + '件') + kv('空転', o.id + '回・' + yen(o.ia) + '円') +
+    h += kv('税込累計（空転を含む）', yen(o.tot) + '円') + kv('税込売上（空転を除く）', yen(o.tot - o.ia) + '円') + kv('概算の税抜営収', '約' + yen(o.est) + '円') + kv('乗車回数（空転を除く）', o.r + '回') + kv('GO無線／手上げ', o.go + '件／' + o.te + '件') + kv('空転', o.id + '回・' + yen(o.ia) + '円') +
       kv('1出番目標との差', (o.df > 0 ? '＋' : (o.df < 0 ? '−' : '±')) + yen(Math.abs(o.df)) + '円', o.df >= 0 ? 'pos' : 'neg') + kv('目標達成率', o.pct + '％');
   } else if (kindKey === 'list') {
     if (!o.rows.length) h += '<div class="sm">まだ入力がありません</div>';
-    o.rows.slice().reverse().slice(0, 40).forEach(function (e) { h += kv(esc(String(e.at).slice(-5)) + '　' + esc(KJ[e.kind] || '？'), yen(Number(e.fare) || 0) + '円'); });
+    o.rows.slice().reverse().slice(0, 40).forEach(function (e) { h += kv(esc(String(e.at).slice(-5)) + (puOk(e) ? '（乗' + esc(e.pu.slice(-5)) + '）' : '') + '　' + esc(KJ[e.kind] || '？'), yen(Number(e.fare) || 0) + '円'); });
   } else {
     o.cool.forEach(function (c, i) { var cl = COOLS[i]; if (!cl) return; h += kv(esc(cl[0]) + '（' + esc(cl[1]) + '）', c.n + '回・' + yen(c.s) + '円' + (c.i ? '（空転' + c.i + '）' : '')); });
-    h += kv('GO無線の比率', (o.r ? Math.round(o.go / o.r * 1000) / 10 : 0) + '％') + kv('手上げの比率', (o.r ? Math.round(o.te / o.r * 1000) / 10 : 0) + '％');
+    h += kv('合計（空転を除く）', o.r + '回・' + yen(o.tot - o.ia) + '円') + kv('GO無線の比率', (o.r ? Math.round(o.go / o.r * 1000) / 10 : 0) + '％') + kv('手上げの比率', (o.r ? Math.round(o.te / o.r * 1000) / 10 : 0) + '％');
   }
   return h + '<div class="sm">日報で確定するまでの暫定値です（この端末の入力から計算）。</div>';
 }
@@ -857,4 +857,4 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V10</div></body></html>
+</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V11</div></body></html>
