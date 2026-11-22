@@ -151,11 +151,9 @@ html.im body::before{content:"";position:fixed;top:0;left:0;right:0;height:calc(
 html.im #ibk{display:flex}
 html.im header.hb .emb{margin:0 8px 0 6px;width:44px;height:44px}
 #hbk{display:none}
-html.hm.bk body>#hbk:not(#ov){display:flex;align-items:center;gap:10px;position:fixed;left:0;right:0;top:0;z-index:50;box-sizing:border-box;height:calc(46px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 10px 0;background:linear-gradient(165deg,#0c2a80 0%,#061a5a 60%,#020a2c 100%);border-bottom:2px solid #f5c542}
-html.hm.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;min-width:58px;height:34px;padding:0 8px;font-size:14px;font-weight:700;white-space:nowrap;text-decoration:none;color:#FFE27A;border:1.5px solid rgba(255,211,79,.85);border-radius:11px;background:rgba(5,20,78,.9)}
-#hbke{flex:none;width:34px;height:34px;border-radius:50%;background-size:cover;background-position:center}
-#hbkt{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-weight:900;font-size:20px;letter-spacing:.08em;color:#FFE27A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-html.hm.bk body>#hf{top:calc(46px + env(safe-area-inset-top));height:calc(100% - 46px - env(safe-area-inset-top))}
+html.hm.bk body>#hbk:not(#ov){display:block;position:fixed;left:8px;top:calc(env(safe-area-inset-top) + 8px);z-index:50;margin:0;padding:0;background:none}
+html.hm.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;min-width:58px;height:40px;padding:0 10px;font-size:15px;font-weight:700;letter-spacing:.02em;white-space:nowrap;text-decoration:none;color:#FFE27A;border:1.5px solid rgba(255,211,79,.9);border-radius:12px;background:rgba(5,20,78,.94);box-shadow:0 2px 8px rgba(0,0,0,.45);-webkit-tap-highlight-color:rgba(255,211,79,.3)}
+#hbke,#hbkt{display:none}
 #sp{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 </style></head><body>
 <div id="hbk"><a id="hbkb" href="#" role="button" aria-label="司令室へ戻る">← 戻る</a><span id="hbke"></span><span id="hbkt"></span></div>
@@ -710,12 +708,8 @@ function bkUpdate() {
       var home = d.querySelector('.screen'), cur = scrOf(d);
       if (home && cur && cur !== home) {
         show = true;
-        var h = cur.querySelector('.hbar .ttl, .hbar b, h1, h2'); ttl = h ? (h.textContent || '').trim().slice(0, 20) : '';
       }
     }
-    $('hbkt').textContent = ttl;
-    var em = document.querySelector('header.hb .emb'), he = $('hbke');
-    if (em && he && !he.style.backgroundImage) { var bi = getComputedStyle(em).backgroundImage; if (bi && bi !== 'none') he.style.backgroundImage = bi; }
     c.toggle('bk', show);
   } catch (e) {}
 }
@@ -724,7 +718,7 @@ function homeWire() {
   try {
     var f = $('hf'), d = f.contentDocument; if (!d || !d.body || !d.querySelector('.screen')) return;
     var si = safeIns(), st = d.createElement('style');
-    st.textContent = '.nav{padding-bottom:calc(6px + ' + si.b + 'px)!important}.screen{padding-bottom:calc(124px + ' + si.b + 'px)!important}body{padding-top:' + si.t + 'px}body.kbnav .screen{display:none!important}body.kbnav .screen.kb-on{display:block!important}.hbar{display:none!important}';   /* 上部の見出し（← 戻る・題名）を、スクロールしても、上に固定 */   /* iframeの中では、画面の安全領域が、0になる場合があるため、アプリ側で測った値を入れる */
+    st.textContent = '.nav{padding-bottom:calc(6px + ' + si.b + 'px)!important}.screen{padding-bottom:calc(124px + ' + si.b + 'px)!important}body{padding-top:' + si.t + 'px}body.kbnav .screen{display:none!important}body.kbnav .screen.kb-on{display:block!important}.hbar .back{visibility:hidden!important}';   /* 上部の見出し（← 戻る・題名）を、スクロールしても、上に固定 */   /* iframeの中では、画面の安全領域が、0になる場合があるため、アプリ側で測った値を入れる */
     d.head.appendChild(st);
     d.addEventListener('click', function (e) {
       var a = e.target && e.target.closest ? e.target.closest('a') : null; if (!a) return;
