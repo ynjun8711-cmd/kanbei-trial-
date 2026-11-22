@@ -153,11 +153,12 @@ html.im header.hb .emb{margin:0 8px 0 6px;width:44px;height:44px}
 #hbk{display:none}
 html.hm.bk body>#hbk:not(#ov){display:flex;align-items:center;gap:10px;position:fixed;left:0;right:0;top:0;z-index:50;box-sizing:border-box;height:calc(46px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 10px 0;background:linear-gradient(165deg,#0c2a80 0%,#061a5a 60%,#020a2c 100%);border-bottom:2px solid #f5c542}
 html.hm.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;min-width:58px;height:34px;padding:0 8px;font-size:14px;font-weight:700;white-space:nowrap;text-decoration:none;color:#FFE27A;border:1.5px solid rgba(255,211,79,.85);border-radius:11px;background:rgba(5,20,78,.9)}
+#hbke{flex:none;width:34px;height:34px;border-radius:50%;background-size:cover;background-position:center}
 #hbkt{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-weight:900;font-size:20px;letter-spacing:.08em;color:#FFE27A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html.hm.bk body>#hf{top:calc(46px + env(safe-area-inset-top));height:calc(100% - 46px - env(safe-area-inset-top))}
 #sp{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 </style></head><body>
-<div id="hbk"><a id="hbkb" href="#" role="button" aria-label="司令室へ戻る">← 戻る</a><span id="hbkt"></span></div>
+<div id="hbk"><a id="hbkb" href="#" role="button" aria-label="司令室へ戻る">← 戻る</a><span id="hbke"></span><span id="hbkt"></span></div>
 <iframe id="hf" sandbox="allow-same-origin" title="戦略分析官" hidden></iframe><div id="sp"></div>
 <div id="iv">
 <header class="hb"><a id="ibk" href="#" role="button" aria-label="戦略分析官のホームへ戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl">営業入力</span></header>
@@ -686,45 +687,65 @@ function b64b(s) { var b = atob(String(s).replace(/\s+/g, '')), a = new Uint8Arr
 function hexs(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
 function modeSet(m) { var c = document.documentElement.classList; c.remove('hm'); c.remove('im'); c.remove('bk'); if (m) c.add(m); if (m === 'im') { var v = $('iv'); if (v) v.scrollTop = 0; navMeasure(); } if (m === 'hm') setTimeout(bkUpdate, 0); }
 function safeIns() { var e = $('sp'), cs = e ? getComputedStyle(e) : null; return { t: cs ? (parseFloat(cs.paddingTop) || 0) : 0, b: cs ? (parseFloat(cs.paddingBottom) || 0) : 0 }; }
-function navMeasure() { try { var f = $('hf'), d = f.contentDocument; if (!d) return; var n = d.querySelector('.screen:target .nav') || d.querySelector('#home .nav') || d.querySelector('.nav'); if (!n) return; var r = n.getBoundingClientRect(); var h = Math.max(0, Math.round(window.innerHeight - r.top)); document.documentElement.style.setProperty('--navh', h + 'px'); } catch (e) {} }
+function scrOf(d) { return d.querySelector('.screen.kb-on') || d.querySelector('.screen:target') || d.querySelector('.screen'); }
+function navMeasure() { try { var f = $('hf'), d = f.contentDocument; if (!d) return; var sc = scrOf(d); var n = (sc && sc.querySelector('.nav')) || d.querySelector('.nav'); if (!n) return; var r = n.getBoundingClientRect(); var h = Math.max(0, Math.round(window.innerHeight - r.top)); document.documentElement.style.setProperty('--navh', h + 'px'); } catch (e) {} }
+function showScreen(id) {
+  /* 画面の切り替えは、アプリ自身が行う（アドレスの「#」に頼らない：iPhoneのSafariでは、アプリ内の表示枠の中で、「#」の移動が効かない場合があるため） */
+  try {
+    var d = $('hf').contentDocument; if (!d) return false;
+    var home = d.querySelector('.screen'), t = id ? d.getElementById(id) : null;
+    if (!t || !t.classList || !t.classList.contains('screen')) t = home;
+    if (!t) return false;
+    var on = d.querySelectorAll('.screen.kb-on'); for (var i = 0; i < on.length; i++) on[i].classList.remove('kb-on');
+    t.classList.add('kb-on'); SY.cur = t.id;
+    try { d.defaultView.scrollTo(0, 0); } catch (e) {}
+    bkUpdate(); navMeasure(); return true;
+  } catch (e) { return false; }
+}
 function bkUpdate() {
-  /* 司令室以外の画面に、アプリ専用の「← 戻る」を出す。画面自身の見出しの「戻る」が見えていれば、それを使う（二重にしない）。見えない時（見出しが無い・表示できない環境）の保険 */
+  /* 司令室以外の画面では、アプリ専用の「← 戻る」を、最上部に固定して出す（画面の外側＝スクロールしても動かない） */
   try {
     var c = document.documentElement.classList, d = $('hf').contentDocument, show = false, ttl = '';
     if (c.contains('hm') && d) {
-      var home = d.querySelector('.screen'), tgt = d.querySelector('.screen:target');
-      if (home && tgt && tgt !== home) {
-        var hb = tgt.querySelector('.hbar'), own = hb && tgt.getBoundingClientRect().height > 0 && hb.getBoundingClientRect().height > 0;
-        if (!own) { show = true; var h = tgt.querySelector('h1,h2,.ttl'); ttl = h ? (h.textContent || '').trim().slice(0, 20) : ''; }
+      var home = d.querySelector('.screen'), cur = scrOf(d);
+      if (home && cur && cur !== home) {
+        show = true;
+        var h = cur.querySelector('.hbar .ttl, .hbar b, h1, h2'); ttl = h ? (h.textContent || '').trim().slice(0, 20) : '';
       }
     }
     $('hbkt').textContent = ttl;
+    var em = document.querySelector('header.hb .emb'), he = $('hbke');
+    if (em && he && !he.style.backgroundImage) { var bi = getComputedStyle(em).backgroundImage; if (bi && bi !== 'none') he.style.backgroundImage = bi; }
     c.toggle('bk', show);
   } catch (e) {}
 }
-$('hbkb').onclick = function (e) { e.preventDefault(); try { var d = $('hf').contentDocument, home = d.querySelector('.screen'); if (home && home.id) d.defaultView.location.hash = '#' + home.id; } catch (x) {} setTimeout(bkUpdate, 50); };
+$('hbkb').onclick = function (e) { e.preventDefault(); showScreen(''); };
 function homeWire() {
   try {
     var f = $('hf'), d = f.contentDocument; if (!d || !d.body || !d.querySelector('.screen')) return;
     var si = safeIns(), st = d.createElement('style');
-    st.textContent = '.nav{padding-bottom:calc(6px + ' + si.b + 'px)!important}.screen{padding-bottom:calc(124px + ' + si.b + 'px)!important}body{padding-top:' + si.t + 'px}.hbar{position:-webkit-sticky!important;position:sticky!important;top:' + si.t + 'px;z-index:28}' + (si.t > 0 ? 'body::before{content:"";position:fixed;top:0;left:0;right:0;height:' + si.t + 'px;background:#061a5a;z-index:27}' : '');   /* 上部の見出し（← 戻る・題名）を、スクロールしても、上に固定 */   /* iframeの中では、画面の安全領域が、0になる場合があるため、アプリ側で測った値を入れる */
+    st.textContent = '.nav{padding-bottom:calc(6px + ' + si.b + 'px)!important}.screen{padding-bottom:calc(124px + ' + si.b + 'px)!important}body{padding-top:' + si.t + 'px}body.kbnav .screen{display:none!important}body.kbnav .screen.kb-on{display:block!important}.hbar{display:none!important}';   /* 上部の見出し（← 戻る・題名）を、スクロールしても、上に固定 */   /* iframeの中では、画面の安全領域が、0になる場合があるため、アプリ側で測った値を入れる */
     d.head.appendChild(st);
     d.addEventListener('click', function (e) {
       var a = e.target && e.target.closest ? e.target.closest('a') : null; if (!a) return;
       var href = a.getAttribute('href') || '';
       if (a.classList.contains('m-input')) { e.preventDefault(); modeSet('im'); return; }          /* 営業入力：外部リンクではなく、このアプリの中の画面（確認画面は出ない） */
       if (/^[a-z]+:/i.test(href)) { e.preventDefault(); return; }
-      if (href.charAt(0) === '#') modeSet('hm');
+      if (href.charAt(0) === '#') {
+        var tg = href.length > 1 ? d.getElementById(href.slice(1)) : null;
+        if (tg && tg.classList && tg.classList.contains('screen')) { e.preventDefault(); modeSet('hm'); showScreen(href.slice(1)); }     /* 画面の切り替え：アプリ自身で行う */
+        else modeSet('hm');
+      }
     }, true);
-    d.defaultView.addEventListener('hashchange', function () { navMeasure(); bkUpdate(); });
-    navMeasure(); bkUpdate();
+    d.body.classList.add('kbnav');
+    showScreen(SY.cur || '');
   } catch (e) {}
 }
 function homeShow(html) {
-  var f = $('hf'), hash = ''; try { hash = f.contentWindow.location.hash || ''; } catch (e) {}
+  var f = $('hf');
   if (SY.url) { try { URL.revokeObjectURL(SY.url); } catch (e) {} }
   SY.url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-  f.onload = homeWire; f.hidden = false; f.src = SY.url + hash; SY.hasHome = true;
+  f.onload = homeWire; f.hidden = false; f.src = SY.url; SY.hasHome = true;
   var c = document.documentElement.classList; if (!c.contains('im')) modeSet('hm');
 }
 function decryptBundle(buf) {
