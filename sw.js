@@ -8,7 +8,7 @@
    ・通信できない状態（navigator.onLine が false）では、画面もアイコンも、保存済みのものだけで開く。裏での更新の取得もしない。
    ・通信できる時は、v4と同じ（最新を優先して取り、保存し直す）。営業の記録には、一切、触れない。 */
 /* v6（試作）：d/ の暗号化データは、保存せず、毎回、通信で取る（古い版が、残らないように）。 */
-var CACHE = 'kanbei-trial-b9';
+var CACHE = 'kanbei-trial-b10';
 var FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 var WAIT_MS = 3000;
 self.addEventListener('install', function (e) {

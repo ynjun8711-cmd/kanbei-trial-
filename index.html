@@ -287,7 +287,7 @@ function render() {
   $('rides').innerHTML = r + '<small>回</small>'; $('idle').innerHTML = id + '<small>回</small>'; $('idleamt').textContent = yen(ia) + '円';
   var sb = $('savebar'), lv = saveLevel(); sb.className = lv.cls; sb.textContent = lv.text;
   $('reg').disabled = !storageOk;
-  var h = $('hist'), all = l.slice().reverse(); renderUndo(d); renderGoal(); renderNearby();
+  var h = $('hist'), all = l.slice().reverse(); renderUndo(d); renderGoal(); renderNearby(); if (typeof liveInject === 'function') liveInject();
   if (!all.length) { h.innerHTML = '<div class="note">まだありません</div>'; return; }
   h.innerHTML = ''; all.forEach(function (e) {
     var row = document.createElement('div');
@@ -686,6 +686,46 @@ function modeSet(m) { var c = document.documentElement.classList; c.remove('hm')
 function safeIns() { var e = $('sp'), cs = e ? getComputedStyle(e) : null; return { t: cs ? (parseFloat(cs.paddingTop) || 0) : 0, b: cs ? (parseFloat(cs.paddingBottom) || 0) : 0 }; }
 function scrOf(d) { return d.querySelector('.screen.kb-on') || d.querySelector('.screen:target') || d.querySelector('.screen'); }
 function navMeasure() { try { var f = $('hf'), d = f.contentDocument; if (!d) return; var sc = scrOf(d); var n = (sc && sc.querySelector('.nav')) || d.querySelector('.nav'); if (!n) return; var r = n.getBoundingClientRect(); var h = Math.max(0, Math.round(window.innerHeight - r.top)); document.documentElement.style.setProperty('--navh', h + 'px'); } catch (e) {} }
+
+/* ===== 入力データの連携（営業入力 → 営業状況・営業日報・営業分析）。同じ端末の中の記録（entries）から、今日の暫定値を作り、戦略分析官の各画面に、カードとして差し込む。通信なし・オフラインでも動く。日報で確定した値とは、別の欄（暫定）として表示する ===== */
+var LIVE_IDS = { status: 'sum', s1: 'sum', nippo: 'list', s2: 'list', sales: 'cool', s3: 'cool' };
+var LIVE_CSS = '.kb-live{border:1.5px solid rgba(255,211,79,.85);border-radius:14px;background:rgba(5,20,78,.95);padding:10px 12px;margin:0 0 10px;color:#fff;font-size:14px;line-height:1.65;text-shadow:none;position:relative;z-index:1}.kb-live h3{margin:0 0 6px;font-size:15px;color:#FFE27A;font-weight:800}.kb-live .kv{display:flex;justify-content:space-between;gap:8px;border-top:1px solid rgba(255,255,255,.12);padding:3px 0}.kb-live .kv:first-of-type{border-top:0}.kb-live .kv b{color:#fff;font-weight:800}.kb-live .sm{font-size:12px;color:#cfe0ff;margin-top:6px}.kb-live .neg{color:#ff8a7a}.kb-live .pos{color:#8fe3a0}';
+function liveStats() {
+  var d = today(), l = entries(d).filter(function (e) { return !e.deleted; }), o = { date: d, rows: l, go: 0, te: 0, id: 0, ia: 0, tot: 0, cool: [0, 1, 2, 3].map(function () { return { n: 0, s: 0, i: 0 }; }) };
+  l.forEach(function (e) {
+    o.tot += e.fare; var c = coolOf(bizMin(rideTime(e).t)); c = (c >= 0 && c <= 3) ? c : 0;
+    if (e.kind === 'go') { o.go++; o.cool[c].n++; o.cool[c].s += e.fare; } else if (e.kind === 'teage') { o.te++; o.cool[c].n++; o.cool[c].s += e.fare; } else { o.id++; o.ia += e.fare; o.cool[c].i++; }
+  });
+  o.r = o.go + o.te; o.est = Math.round(o.tot / TAX) - o.ia; o.df = o.est - G; o.pct = Math.round(o.est / G * 1000) / 10;
+  return o;
+}
+function liveHtml(kindKey) {
+  var o = liveStats(), h = '<h3>' + (kindKey === 'list' ? '本日の入力（iPhone・暫定）' : (kindKey === 'cool' ? '本日のクール別（iPhone・暫定）' : '本日の営業（iPhone・暫定）')) + '</h3>';
+  function kv(a, b, c) { return '<div class="kv"><span>' + a + '</span><b' + (c ? ' class="' + c + '"' : '') + '>' + b + '</b></div>'; }
+  if (kindKey === 'sum') {
+    h += kv('税込累計', yen(o.tot) + '円') + kv('概算の税抜営収', '約' + yen(o.est) + '円') + kv('乗車回数（空転を除く）', o.r + '回') + kv('GO無線／手上げ', o.go + '件／' + o.te + '件') + kv('空転', o.id + '回・' + yen(o.ia) + '円') +
+      kv('1出番目標との差', (o.df > 0 ? '＋' : (o.df < 0 ? '−' : '±')) + yen(Math.abs(o.df)) + '円', o.df >= 0 ? 'pos' : 'neg') + kv('目標達成率', o.pct + '％');
+  } else if (kindKey === 'list') {
+    if (!o.rows.length) h += '<div class="sm">まだ入力がありません</div>';
+    o.rows.slice().reverse().slice(0, 40).forEach(function (e) { h += kv(esc(String(e.at).slice(-5)) + '　' + esc(KJ[e.kind] || '？'), yen(Number(e.fare) || 0) + '円'); });
+  } else {
+    o.cool.forEach(function (c, i) { var cl = COOLS[i]; if (!cl) return; h += kv(esc(cl[0]) + '（' + esc(cl[1]) + '）', c.n + '回・' + yen(c.s) + '円' + (c.i ? '（空転' + c.i + '）' : '')); });
+    h += kv('GO無線の比率', (o.r ? Math.round(o.go / o.r * 1000) / 10 : 0) + '％') + kv('手上げの比率', (o.r ? Math.round(o.te / o.r * 1000) / 10 : 0) + '％');
+  }
+  return h + '<div class="sm">日報で確定するまでの暫定値です（この端末の入力から計算）。</div>';
+}
+function liveInject() {
+  try {
+    var f = $('hf'), d = f.contentDocument; if (!d || !d.body) return;
+    if (!d.getElementById('kb-live-css')) { var st = d.createElement('style'); st.id = 'kb-live-css'; st.textContent = LIVE_CSS; d.head.appendChild(st); }
+    var old = d.querySelectorAll('.kb-live'); for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+    for (var id in LIVE_IDS) {
+      var sc = d.getElementById(id); if (!sc || !sc.classList || !sc.classList.contains('screen')) continue;
+      var box = d.createElement('div'); box.className = 'kb-live'; box.setAttribute('data-kb-live', LIVE_IDS[id]); box.innerHTML = liveHtml(LIVE_IDS[id]);
+      var hb = sc.querySelector('.hbar'); if (hb && hb.nextSibling) sc.insertBefore(box, hb.nextSibling); else sc.insertBefore(box, sc.firstChild);
+    }
+  } catch (e) {}
+}
 function showScreen(id) {
   /* 画面の切り替えは、アプリ自身が行う（アドレスの「#」に頼らない：iPhoneのSafariでは、アプリ内の表示枠の中で、「#」の移動が効かない場合があるため） */
   try {
@@ -694,7 +734,7 @@ function showScreen(id) {
     if (!t || !t.classList || !t.classList.contains('screen')) t = home;
     if (!t) return false;
     var on = d.querySelectorAll('.screen.kb-on'); for (var i = 0; i < on.length; i++) on[i].classList.remove('kb-on');
-    t.classList.add('kb-on'); SY.cur = t.id;
+    t.classList.add('kb-on'); SY.cur = t.id; liveInject();
     try { d.defaultView.scrollTo(0, 0); } catch (e) {}
     bkUpdate(); navMeasure(); return true;
   } catch (e) { return false; }
@@ -737,6 +777,7 @@ function homeWire() {
       }
     }, true);
     d.body.classList.add('kbnav');
+    liveInject();
     showScreen(SY.cur || '');
   } catch (e) {}
 }
@@ -816,4 +857,4 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V9</div></body></html>
+</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V10</div></body></html>
