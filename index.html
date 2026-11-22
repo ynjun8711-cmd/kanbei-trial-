@@ -159,7 +159,7 @@ html.hm.bk body>#hf{top:calc(46px + env(safe-area-inset-top));height:calc(100% -
 #sp{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 </style></head><body>
 <div id="hbk"><a id="hbkb" href="#" role="button" aria-label="司令室へ戻る">← 戻る</a><span id="hbke"></span><span id="hbkt"></span></div>
-<iframe id="hf" sandbox="allow-same-origin" title="戦略分析官" hidden></iframe><div id="sp"></div>
+<iframe id="hf" sandbox="allow-same-origin allow-scripts" title="戦略分析官" hidden></iframe><div id="sp"></div>
 <div id="iv">
 <header class="hb"><a id="ibk" href="#" role="button" aria-label="戦略分析官のホームへ戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl">営業入力</span></header>
 <p class="note hint">営業入力（入力フォーム）。iPhoneだけで使えます（通信・Macは不要）。運転中は使わず、停車中に</p>
@@ -741,7 +741,15 @@ function homeWire() {
     showScreen(SY.cur || '');
   } catch (e) {}
 }
+function htmlSafe(h) {
+  /* 表示する戦略分析官の中身の検査。スクリプト・イベント属性・javascript:・外部の読み込み・埋め込みを、持っていたら、表示しない。
+     （iPhoneのSafari＝WebKitは、スクリプトを許可しない枠の中では、アプリ側の操作（タップの受け取り）まで止める。そのため、枠に scripts を許可する代わりに、中身を検査し、枠の中の動作を、下の CSP で、全面的に禁止する） */
+  return typeof h === 'string' && /^\s*<!doctype html/i.test(h) && /<head[\s>]/i.test(h) && !/<script|<iframe|<object|<embed|<base[\s>]|<link[^>]+rel=["']?(?:import|preload|prefetch)|http-equiv|javascript:|\son[a-z]+\s*=/i.test(h);
+}
+var CSP_META = '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; img-src data: blob:; font-src data:; script-src \'none\'; connect-src \'none\'; frame-src \'none\'; object-src \'none\'; base-uri \'none\'; form-action \'none\'">';
 function homeShow(html) {
+  if (!htmlSafe(html)) { syMsg('表示できない内容のため、表示しませんでした', true); return; }
+  html = html.replace(/<head[^>]*>/i, function (m) { return m + CSP_META; });
   var f = $('hf');
   if (SY.url) { try { URL.revokeObjectURL(SY.url); } catch (e) {} }
   SY.url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
@@ -759,7 +767,7 @@ function decryptBundle(buf) {
       if (hexs(h) !== head.sha256) return Promise.reject('ハッシュ');
       if (!(head.seq > SY.seq)) return Promise.reject('古い版');                      /* 同じ・古い版への巻き戻しは、取り込まない */
       var html = new TextDecoder().decode(body);
-      if (!/^\s*<!doctype html/i.test(html) || /<script/i.test(html)) return Promise.reject('内容');    /* 戦略分析官は、スクリプトを持たない。持っていれば、表示しない */
+      if (!htmlSafe(html)) return Promise.reject('内容');    /* 戦略分析官は、スクリプトを持たない。持っていれば、表示しない */
       return { html: html, head: head };
     });
   });
