@@ -150,8 +150,14 @@ html.im body::before{content:"";position:fixed;top:0;left:0;right:0;height:calc(
 #ibk{display:none;flex:none;align-items:center;justify-content:center;min-width:58px;height:38px;margin:0 0 0 6px;padding:0 6px;font-size:14px;font-weight:700;letter-spacing:.02em;white-space:nowrap;text-decoration:none;border:1.5px solid rgba(255,211,79,.85);border-radius:11px;background:linear-gradient(180deg,#fff8cc,#FFE27A 48%,#f0b830);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;-webkit-text-stroke:.5px rgba(70,35,0,.7);-webkit-tap-highlight-color:rgba(255,211,79,.25)}
 html.im #ibk{display:flex}
 html.im header.hb .emb{margin:0 8px 0 6px;width:44px;height:44px}
+#hbk{display:none}
+html.hm.bk body>#hbk:not(#ov){display:flex;align-items:center;gap:10px;position:fixed;left:0;right:0;top:0;z-index:50;box-sizing:border-box;height:calc(46px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 10px 0;background:linear-gradient(165deg,#0c2a80 0%,#061a5a 60%,#020a2c 100%);border-bottom:2px solid #f5c542}
+html.hm.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;min-width:58px;height:34px;padding:0 8px;font-size:14px;font-weight:700;white-space:nowrap;text-decoration:none;color:#FFE27A;border:1.5px solid rgba(255,211,79,.85);border-radius:11px;background:rgba(5,20,78,.9)}
+#hbkt{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-weight:900;font-size:20px;letter-spacing:.08em;color:#FFE27A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.hm.bk body>#hf{top:calc(46px + env(safe-area-inset-top));height:calc(100% - 46px - env(safe-area-inset-top))}
 #sp{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 </style></head><body>
+<div id="hbk"><a id="hbkb" href="#" role="button" aria-label="司令室へ戻る">← 戻る</a><span id="hbkt"></span></div>
 <iframe id="hf" sandbox="allow-same-origin" title="戦略分析官" hidden></iframe><div id="sp"></div>
 <div id="iv">
 <header class="hb"><a id="ibk" href="#" role="button" aria-label="戦略分析官のホームへ戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl">営業入力</span></header>
@@ -678,9 +684,25 @@ var SY = { keys: null, ver: '', seq: 0, busy: false, url: '', gen: '', hasHome: 
 function syMsg(t, warn) { var e = $('symsg'); if (e) { e.textContent = t; e.style.color = warn ? '#ffeaa0' : ''; } }
 function b64b(s) { var b = atob(String(s).replace(/\s+/g, '')), a = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a; }
 function hexs(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
-function modeSet(m) { var c = document.documentElement.classList; c.remove('hm'); c.remove('im'); if (m) c.add(m); if (m === 'im') { var v = $('iv'); if (v) v.scrollTop = 0; navMeasure(); } }
+function modeSet(m) { var c = document.documentElement.classList; c.remove('hm'); c.remove('im'); c.remove('bk'); if (m) c.add(m); if (m === 'im') { var v = $('iv'); if (v) v.scrollTop = 0; navMeasure(); } if (m === 'hm') setTimeout(bkUpdate, 0); }
 function safeIns() { var e = $('sp'), cs = e ? getComputedStyle(e) : null; return { t: cs ? (parseFloat(cs.paddingTop) || 0) : 0, b: cs ? (parseFloat(cs.paddingBottom) || 0) : 0 }; }
 function navMeasure() { try { var f = $('hf'), d = f.contentDocument; if (!d) return; var n = d.querySelector('.screen:target .nav') || d.querySelector('#home .nav') || d.querySelector('.nav'); if (!n) return; var r = n.getBoundingClientRect(); var h = Math.max(0, Math.round(window.innerHeight - r.top)); document.documentElement.style.setProperty('--navh', h + 'px'); } catch (e) {} }
+function bkUpdate() {
+  /* 司令室以外の画面に、アプリ専用の「← 戻る」を出す。画面自身の見出しの「戻る」が見えていれば、それを使う（二重にしない）。見えない時（見出しが無い・表示できない環境）の保険 */
+  try {
+    var c = document.documentElement.classList, d = $('hf').contentDocument, show = false, ttl = '';
+    if (c.contains('hm') && d) {
+      var home = d.querySelector('.screen'), tgt = d.querySelector('.screen:target');
+      if (home && tgt && tgt !== home) {
+        var hb = tgt.querySelector('.hbar'), own = hb && tgt.getBoundingClientRect().height > 0 && hb.getBoundingClientRect().height > 0;
+        if (!own) { show = true; var h = tgt.querySelector('h1,h2,.ttl'); ttl = h ? (h.textContent || '').trim().slice(0, 20) : ''; }
+      }
+    }
+    $('hbkt').textContent = ttl;
+    c.toggle('bk', show);
+  } catch (e) {}
+}
+$('hbkb').onclick = function (e) { e.preventDefault(); try { var d = $('hf').contentDocument, home = d.querySelector('.screen'); if (home && home.id) d.defaultView.location.hash = '#' + home.id; } catch (x) {} setTimeout(bkUpdate, 50); };
 function homeWire() {
   try {
     var f = $('hf'), d = f.contentDocument; if (!d || !d.body || !d.querySelector('.screen')) return;
@@ -694,8 +716,8 @@ function homeWire() {
       if (/^[a-z]+:/i.test(href)) { e.preventDefault(); return; }
       if (href.charAt(0) === '#') modeSet('hm');
     }, true);
-    d.defaultView.addEventListener('hashchange', function () { navMeasure(); });
-    navMeasure();
+    d.defaultView.addEventListener('hashchange', function () { navMeasure(); bkUpdate(); });
+    navMeasure(); bkUpdate();
   } catch (e) {}
 }
 function homeShow(html) {
