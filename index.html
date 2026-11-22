@@ -754,7 +754,7 @@ function syncInit() {
   idbGet('synckey', function (k) {
     idbGet('home', function (h) {
       if (h && h.html && h.seq) { SY.seq = h.seq; SY.ver = h.ver || ''; SY.gen = h.gen || ''; homeShow(h.html); }
-      if (k && k.ak && k.name) { SY.keys = k; if (!SY.hasHome) syMsg('鍵は入っています。最新を確認します…'); syncCheck(false); } else if (!SY.hasHome) { syMsg('鍵が、まだ入っていません（最初に1回だけ、鍵ファイルを取り込みます）'); }
+      if (k && k.ak && k.name) { SY.keys = k; if (!SY.hasHome) syMsg('鍵は入っています。最新を確認します…'); syncCheck(false); } else if (!SY.hasHome) { syMsg('鍵が、まだ入っていません（最初に1回だけ、鍵ファイルを取り込みます）'); try { fetch('demo.html', { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) { if (t && !SY.hasHome && !SY.keys) homeShow(t); }).catch(function () {}); } catch (e) {} }
       else syMsg('保存済みの版を表示しています（データ更新：' + SY.gen + '）');
     });
   });
