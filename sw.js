@@ -10,7 +10,7 @@
 /* v6.2（2026-11-25）：鍵なしのデモ画面（demo.html）は、遅い回線でも、古い保存や index.html を代わりに返さない（毎回、通信で取る）。
 /* v6.1（2026-11-24）：ページの取得が、5xx（GitHubの一時的な不調＝ユニコーン画面）の時も、保存済みの版で開く（以前は、5xxの応答を、そのまま、表示していた）。
    v6（試作）：d/ の暗号化データは、保存せず、毎回、通信で取る（古い版が、残らないように）。 */
-var CACHE = 'kanbei-trial-b22';
+var CACHE = 'kanbei-trial-b24';
 var FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 var WAIT_MS = 3000;
 self.addEventListener('install', function (e) {
