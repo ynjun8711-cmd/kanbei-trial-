@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#061538"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-src blob:; form-action 'none'; base-uri 'none'; object-src 'none'">
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#061538"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.workers.dev http://127.0.0.1:*; frame-src blob:; form-action 'none'; base-uri 'none'; object-src 'none'">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="営業入力">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><title>営業入力（試験）</title>
 <style>
@@ -816,11 +816,12 @@ function syncCheck(force) {
   if (!SY.keys || SY.busy) return;
   if (navigator.onLine === false) { if (SY.hasHome) syMsg('通信なし：保存済みの版（' + (SY.gen || '') + '）を表示しています'); return; }
   SY.busy = true;
-  var base = 'd/' + SY.keys.name, q = '?_=' + Date.now();
-  fetch(base + '.v' + q, { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : Promise.reject('v' + r.status); }).then(function (v) {
+  var K = SY.keys, base = (K.origin ? K.origin + '/' : '') + 'd/' + K.name, q = K.origin ? '' : '?_=' + Date.now();
+  var fo = K.origin ? { cache: 'no-store', mode: 'cors', credentials: 'omit', headers: { 'Authorization': 'Bearer ' + K.rt } } : { cache: 'no-store' };
+  fetch(base + '.v' + q, fo).then(function (r) { return r.ok ? r.text() : Promise.reject('v' + r.status); }).then(function (v) {
     v = v.trim();
     if (!force && v === SY.ver && SY.hasHome) { syMsg('最新です（データ更新：' + SY.gen + '）'); return; }
-    return fetch(base + '.bin' + q, { cache: 'no-store' }).then(function (r) { return r.ok ? r.arrayBuffer() : Promise.reject('bin' + r.status); }).then(decryptBundle).then(function (res) {
+    return fetch(base + '.bin' + q, fo).then(function (r) { return r.ok ? r.arrayBuffer() : Promise.reject('bin' + r.status); }).then(decryptBundle).then(function (res) {
       var rec = { html: res.html, seq: res.head.seq, gen: res.head.gen, ver: v };
       idbPut('home', rec, function (ok) {
         if (!ok) { syMsg('保存できませんでした（今の画面は、そのままです）', 1); return; }
@@ -829,14 +830,21 @@ function syncCheck(force) {
     });
   }).catch(function (e) { syMsg('最新を取得できませんでした（' + (SY.hasHome ? '保存済みの版を表示します' : '営業入力は、そのまま使えます') + '）：' + (typeof e === 'string' ? e : '通信または復号に失敗'), 1); }).then(function () { SY.busy = false; });
 }
+function syOriginOk(o) { return /^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.workers\.dev$/.test(o) || /^http:\/\/127\.0\.0\.1:\d+$/.test(o); }
 function syncSetKey(text, cb) {
-  var raw; try { raw = b64b(text); if (raw.length !== 64) throw 0; } catch (e) { syMsg('鍵の形式が、正しくありません', 1); if (cb) cb(false); return; }
+  /* 鍵ファイル：1行目＝鍵。（あれば）次の行に origin=https://〜.workers.dev（非公開の窓口）。窓口が無ければ、同じサイトの d/ から取る（試験版） */
+  var lines = String(text || '').split(/\r?\n/).map(function (x) { return x.trim(); }).filter(Boolean), origin = '';
+  lines.slice(1).forEach(function (l) { var m = /^origin\s*=\s*(\S+)$/.exec(l); if (m) origin = m[1].replace(/\/+$/, ''); });
+  if (origin && !syOriginOk(origin)) { syMsg('窓口のアドレスが、正しくありません', 1); if (cb) cb(false); return; }
+  var raw; try { raw = b64b(lines[0] || ''); if (raw.length !== 64) throw 0; } catch (e) { syMsg('鍵の形式が、正しくありません', 1); if (cb) cb(false); return; }
   var C = crypto.subtle;
   C.importKey('raw', raw.slice(0, 32), 'AES-GCM', false, ['decrypt']).then(function (ak) {
     return C.importKey('raw', raw.slice(32), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']).then(function (hk) {
       return C.sign('HMAC', hk, new TextEncoder().encode('file')).then(function (sig) {
-        SY.keys = { ak: ak, name: hexs(sig).slice(0, 32) };
-        idbPut('synckey', SY.keys, function (ok) { syMsg(ok ? '鍵を保存しました。最新を確認します…' : '鍵を保存できませんでした', !ok); if (cb) cb(ok); if (ok) syncCheck(true); });
+        return C.sign('HMAC', hk, new TextEncoder().encode('read')).then(function (rs) {
+          SY.keys = { ak: ak, name: hexs(sig).slice(0, 32), rt: hexs(rs), origin: origin };
+          idbPut('synckey', SY.keys, function (ok) { syMsg(ok ? '鍵を保存しました。最新を確認します…' : '鍵を保存できませんでした', !ok); if (cb) cb(ok); if (ok) syncCheck(true); });
+        });
       });
     });
   }).catch(function () { syMsg('鍵を読み込めませんでした', 1); if (cb) cb(false); });
@@ -857,4 +865,4 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V11</div></body></html>
+</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V12</div></body></html>
