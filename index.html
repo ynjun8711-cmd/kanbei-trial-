@@ -161,6 +161,8 @@ html.im header.hb .emb{margin:0 8px 0 6px;width:40px;height:40px}
 html.im header.hb{height:44px;border-radius:14px;margin-left:2px;margin-right:2px;margin-bottom:12px}
 #hbk{display:none}
 html.bk body>#hbk:not(#ov){display:block;position:fixed;left:var(--bkl,8px);top:var(--bkt,calc(var(--sat) + 8px));z-index:70;margin:0;padding:0;background:none}
+/* スクロールして見出しが画面から消えた時だけ、固定の「戻る」の後ろに、背景の帯を出す（本文の文字・日付が、戻るボタンに重なって見えるのを防ぐ）。2026-11-25 */
+html.bks body>#hbk::before{content:"";position:fixed;left:0;right:0;top:var(--sat);height:calc(var(--bkt,0px) + var(--bkh,40px) + 6px - var(--sat));background:#0a2a86;border-bottom:1px solid rgba(255,211,79,.55);box-shadow:0 3px 8px rgba(0,0,20,.45);z-index:-1;pointer-events:none}
 html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:var(--bkw,58px);width:var(--bkw,auto);height:var(--bkh,40px);padding:0 10px;font-size:15px;font-weight:700;letter-spacing:.02em;white-space:nowrap;text-decoration:none;color:#FFE27A;border:1.5px solid rgba(255,211,79,.9);border-radius:12px;background:rgba(5,20,78,.94);box-shadow:0 2px 8px rgba(0,0,0,.45);-webkit-tap-highlight-color:rgba(255,211,79,.3)}
 #hbke,#hbkt{display:none}
 #sp{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
@@ -732,7 +734,7 @@ function genFmt(g) {
 function syMsg(t, warn) { var e = $('symsg'); if (e) { e.textContent = t; e.style.color = warn ? '#ffeaa0' : ''; } }
 function b64b(s) { var b = atob(String(s).replace(/\s+/g, '')), a = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a; }
 function hexs(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
-function modeSet(m, pg) { var c = document.documentElement.classList; c.remove('hm'); c.remove('im'); c.remove('bk'); if (m) c.add(m); if (m === 'im') { pg = pg || 'iv'; document.documentElement.setAttribute('data-ovp', pg); var v = $(pg); if (v) v.scrollTop = 0; navMeasure(); } else document.documentElement.removeAttribute('data-ovp'); if (m === 'hm') setTimeout(bkUpdate, 0); if (m === 'im') bkUpdate(); setTimeout(bkAlign, 30); }
+function modeSet(m, pg) { var c = document.documentElement.classList; c.remove('hm'); c.remove('im'); c.remove('bk'); if (m) c.add(m); if (m === 'im') { pg = pg || 'iv'; document.documentElement.setAttribute('data-ovp', pg); var v = $(pg); if (v) v.scrollTop = 0; navMeasure(); } else document.documentElement.removeAttribute('data-ovp'); if (m === 'hm') setTimeout(bkUpdate, 0); if (m === 'im') bkUpdate(); setTimeout(bkAlign, 30); setTimeout(bksUpdate, 40); }
 function safeIns() { var e = $('sp'), cs = e ? getComputedStyle(e) : null; return { t: cs ? (parseFloat(cs.paddingTop) || 0) : 0, b: cs ? (parseFloat(cs.paddingBottom) || 0) : 0 }; }
 function scrOf(d) { return d.querySelector('.screen.kb-on') || d.querySelector('.screen:target') || d.querySelector('.screen'); }
 function navMeasure() { try { var f = $('hf'), d = f.contentDocument; if (!d) return; var sc = scrOf(d); var n = (sc && sc.querySelector('.nav')) || d.querySelector('.nav'); if (!n) return; var r = n.getBoundingClientRect(), ft = f.getBoundingClientRect().top; var h = Math.max(0, Math.round(window.innerHeight + (SY.vfix || 0) - (r.top + ft)));   /* 表示枠は、安全領域の内側にあるため、枠の上端の分を、足す */ document.documentElement.style.setProperty('--navh', h + 'px'); } catch (e) {} }
@@ -816,7 +818,7 @@ function showScreen(id) {
     var on = d.querySelectorAll('.screen.kb-on'); for (var i = 0; i < on.length; i++) on[i].classList.remove('kb-on');
     t.classList.add('kb-on'); SY.cur = t.id; liveInject();
     try { d.defaultView.scrollTo(0, 0); } catch (e) {}
-    bkUpdate(); navMeasure(); bkAlign(); return true;
+    bkUpdate(); navMeasure(); bkAlign(); bksUpdate(); return true;
   } catch (e) { return false; }
 }
 function bkUpdate() {
@@ -834,6 +836,16 @@ function bkUpdate() {
   } catch (e) {}
 }
 var OV = { from: null };
+function bksUpdate() {
+  /* 固定の「戻る」の背景帯：下層の画面を、見出しが消えるところまで、スクロールした時だけ */
+  try {
+    var c = document.documentElement.classList, y = 0;
+    if (c.contains('im')) { var pg = $(document.documentElement.getAttribute('data-ovp') || 'iv'); y = pg ? pg.scrollTop : 0; }
+    else if (c.contains('hm')) { var w = $('hf').contentWindow; y = w ? (w.scrollY || 0) : 0; }
+    c.toggle('bks', c.contains('bk') && y > 36);
+  } catch (e) {}
+}
+['iv', 'mg', 'dg', 'gl', 'nb'].forEach(function (i) { var e = $(i); if (e) e.addEventListener('scroll', bksUpdate, { passive: true }); });
 function openOv(pg) {
   /* アプリ内のページ（営業入力・管理・診断・売上目標・近くの実績）を開く。開いた元を、覚える（「← 戻る」で、そこへ戻る） */
   var c = document.documentElement.classList;
@@ -869,6 +881,7 @@ function homeWire() {
     var st = d.createElement('style');
     st.textContent = '.nav{padding-bottom:0!important}.screen,#home.screen{padding-bottom:124px!important}.screen:not(#home){padding-top:2px!important}.hbar{height:44px!important;margin-bottom:4px!important}body.kbnav .screen{display:none!important}body.kbnav .screen.kb-on{display:block!important}.hbar .back{visibility:hidden!important}';   /* 画面の切り替え／見出しの「戻る」は、外側の固定ボタンに任せる。上下の安全領域は、外側（表示枠の位置）で扱う＝枠の中には、足さない */
     d.head.appendChild(st);
+    try { d.defaultView.addEventListener('scroll', bksUpdate, { passive: true }); } catch (e) {}
     d.addEventListener('click', function (e) {
       var a = e.target && e.target.closest ? e.target.closest('a') : null; if (!a) return;
       var href = a.getAttribute('href') || '';
@@ -1003,4 +1016,4 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V18</div></body></html>
+</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V21</div></body></html>
