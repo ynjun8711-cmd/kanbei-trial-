@@ -7,9 +7,10 @@
 /* v5（2026-11-22）：機内モード・圏外では、一切、通信しない（iPhoneの「機内モードをオフにするか、Wi-Fiを使用してください」の警告の対策）。
    ・通信できない状態（navigator.onLine が false）では、画面もアイコンも、保存済みのものだけで開く。裏での更新の取得もしない。
    ・通信できる時は、v4と同じ（最新を優先して取り、保存し直す）。営業の記録には、一切、触れない。 */
+/* v6.2（2026-11-25）：鍵なしのデモ画面（demo.html）は、遅い回線でも、古い保存や index.html を代わりに返さない（毎回、通信で取る）。
 /* v6.1（2026-11-24）：ページの取得が、5xx（GitHubの一時的な不調＝ユニコーン画面）の時も、保存済みの版で開く（以前は、5xxの応答を、そのまま、表示していた）。
    v6（試作）：d/ の暗号化データは、保存せず、毎回、通信で取る（古い版が、残らないように）。 */
-var CACHE = 'kanbei-trial-b21';
+var CACHE = 'kanbei-trial-b22';
 var FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 var WAIT_MS = 3000;
 self.addEventListener('install', function (e) {
@@ -44,6 +45,11 @@ function isPage(req) {
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== self.location.origin) return;
   if (new URL(e.request.url).pathname.indexOf('/d/') >= 0) return;                  /* 暗号化データ：このSWは、触れない（通信できなければ、アプリ側が、保存済みを使う） */
+  if (/\/demo\.html$/.test(new URL(e.request.url).pathname)) {                    /* デモ画面（鍵なしの表示）：遅い回線で、古い版や、別のページ（index.html）を、代わりに返さない。毎回、通信で取る。取れなければ、空の応答（アプリは、そのまま使える） */
+    e.respondWith(offline() ? caches.match(e.request, { ignoreSearch: true }).then(function (h) { return h || new Response('', { status: 504 }); })
+      : fresh(e.request).then(function (r) { if (r && r.ok) { var cp = r.clone(); caches.open(CACHE).then(function (c) { c.put(e.request, cp); }); } return r; }).catch(function () { return caches.match(e.request, { ignoreSearch: true }).then(function (h) { return h || new Response('', { status: 504 }); }); }));
+    return;
+  }
   if (offline()) {                                                               /* 通信できない：保存済みだけで返す（通信を試さない＝iPhoneの警告が出ない） */
     e.respondWith(caches.match(e.request, { ignoreSearch: true }).then(function (h) { return h || (isPage(e.request) ? (caches.match('./index.html') || caches.match('./')) : null) || new Response('', { status: 504 }); }));
     return;
