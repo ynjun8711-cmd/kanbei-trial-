@@ -7,8 +7,9 @@
 /* v5（2026-11-22）：機内モード・圏外では、一切、通信しない（iPhoneの「機内モードをオフにするか、Wi-Fiを使用してください」の警告の対策）。
    ・通信できない状態（navigator.onLine が false）では、画面もアイコンも、保存済みのものだけで開く。裏での更新の取得もしない。
    ・通信できる時は、v4と同じ（最新を優先して取り、保存し直す）。営業の記録には、一切、触れない。 */
-/* v6（試作）：d/ の暗号化データは、保存せず、毎回、通信で取る（古い版が、残らないように）。 */
-var CACHE = 'kanbei-trial-b12';
+/* v6.1（2026-11-24）：ページの取得が、5xx（GitHubの一時的な不調＝ユニコーン画面）の時も、保存済みの版で開く（以前は、5xxの応答を、そのまま、表示していた）。
+   v6（試作）：d/ の暗号化データは、保存せず、毎回、通信で取る（古い版が、残らないように）。 */
+var CACHE = 'kanbei-trial-b13';
 var FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 var WAIT_MS = 3000;
 self.addEventListener('install', function (e) {
@@ -55,8 +56,8 @@ self.addEventListener('fetch', function (e) {
     var cached = function () { return caches.match(e.request, { ignoreSearch: true }).then(function (h) { return h || caches.match('./index.html') || caches.match('./'); }); };
     var timer = new Promise(function (res) { setTimeout(function () { res(null); }, WAIT_MS); });
     e.respondWith(Promise.race([net.catch(function () { return null; }), timer]).then(function (r) {
-      if (r) return r;                                                           /* 3秒待っても、通信できない／圏外：保存済みの版で開く（通信は、裏で続き、取れたら保存） */
-      return cached().then(function (h) { return h || net; });
+      if (r && r.ok) return r;                                                   /* 取れた */
+      return cached().then(function (h) { return h || r || net; });             /* 3秒待っても取れない／圏外／サーバーの不調（5xx・GitHubのユニコーン画面など）：保存済みの版で開く（保存が無い時だけ、その応答） */
     }));
     e.waitUntil(net.catch(function () {}));
     return;
