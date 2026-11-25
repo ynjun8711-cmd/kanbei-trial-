@@ -158,6 +158,9 @@ html.im .ibk{display:flex;visibility:hidden}
 html.im #iv .ibk{display:none}
 html.im header.hb .emb{margin:0 8px 0 6px;width:40px;height:40px}
 /* 見出しの大きさを、戦略分析官の画面と同じにする（高さ44・家紋40・角丸14・左右14。上端の位置は、変えない）。2026-11-25 */
+/* 金色の筆文字の見出し（2026-11-25）：画像は、戦略分析官（Mac→iPhoneの画面データ）の中のものを借りる（画像の置き場は1つ・この本体は、大きくならない）。借りられない間は、従来の文字 */
+.ttl.bt{display:block;font-size:0!important;line-height:0!important;color:transparent!important;-webkit-text-fill-color:transparent;background-color:transparent;background-clip:border-box!important;-webkit-background-clip:border-box!important;background-repeat:no-repeat!important;background-position:left center!important;background-size:contain!important;-webkit-text-stroke:0!important;filter:none!important;letter-spacing:0!important;text-shadow:none!important;height:36px;width:calc(36px * var(--ar,3));max-width:calc(100% - 118px);flex:none}
+html.brush header.hb{background:var(--hbbg) center/100% 100% no-repeat,linear-gradient(160deg,#071c5c,#0a2a7a)!important}
 html.im header.hb{height:44px;border-radius:14px;margin-left:2px;margin-right:2px;margin-bottom:12px}
 #hbk{display:none}
 html.bk body>#hbk:not(#ov){display:block;position:fixed;left:var(--bkl,8px);top:var(--bkt,calc(var(--sat) + 8px));z-index:70;margin:0;padding:0;background:none}
@@ -170,7 +173,7 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 <div id="hbk"><a id="hbkb" href="#" role="button" aria-label="戻る">← 戻る</a><span id="hbke"></span><span id="hbkt"></span></div>
 <iframe id="hf" sandbox="allow-same-origin allow-scripts" title="戦略分析官" hidden></iframe><div id="sp"></div>
 <div id="iv">
-<header class="hb"><a id="ibk" class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl">営業入力</span></header>
+<header class="hb"><a id="ibk" class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl" data-bt="営業入力">営業入力</span></header>
 <p class="note hint">停車中に操作してください（通信・Macは不要です）。</p>
 <div id="savebar">保存の確認中…</div>
 <div class="plate hero"><div class="lab">税込累計（暫定売上）</div><div class="big" id="total">0<small>円</small></div>
@@ -196,7 +199,7 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 <div id="ov" hidden><div class="dlg"><b>本日の入力を、一括リセットしますか？</b><p id="ovp"></p><div class="two"><button id="ovy" type="button">リセットする</button><button id="ovn" type="button">やめる</button></div></div></div>
 </div>
 <div id="mg" class="hpage">
-<header class="hb"><a class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl">管理</span></header>
+<header class="hb"><a class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl" data-bt="管理">管理</span></header>
 <h3>戦略分析官の自動同期</h3>
 <div class="plate"><div class="sub" id="symsg">鍵が、まだ入っていません（最初に1回だけ、鍵ファイルを取り込みます）</div></div>
 <button class="btn2" id="sybtn" type="button">鍵ファイルを取り込む</button>
@@ -218,7 +221,7 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 <div class="note" id="packmsg">Macで作った「kanbei_analysis_pack.json」（iCloud Drive「官兵衛パック」）を選びます。通信は使わず、このiPhoneの中だけに保存します。営業の記録・バックアップには、触れません。</div>
 <div class="foot" aria-hidden="true"></div></div>
 <div id="dg" class="hpage">
-<header class="hb"><a class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl">診断</span></header>
+<header class="hb"><a class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl" data-bt="診断">診断</span></header>
 <h3>余白の実測（試験版だけ）</h3><button class="btn2" id="marginlab" type="button">余白の実測を開く（画面のスクリーンショットを撮る）</button><h3>同期の診断</h3>
 <button class="btn2" id="sydg" type="button">同期の診断を表示</button>
 <pre class="note" id="sydgo" style="display:none;white-space:pre-wrap;word-break:break-all;font-size:12px"></pre>
@@ -228,10 +231,10 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 <div class="note">使いかた：①「保存テストを書き込む」→ ②機内モードにして、アプリを終了 →③ iPhoneを再起動 → ④もう一度開いて、この欄の「保存テスト」が ✓ なら、再起動後も、保存が残っています。</div>
 <div class="foot" aria-hidden="true"></div></div>
 <div id="gl" class="hpage">
-<header class="hb"><a class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl">売上目標</span></header>
+<header class="hb"><a class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl" data-bt="売上目標">売上目標</span></header>
 <div class="plate" id="goal"><div class="note">読み込み中…</div></div><div class="foot" aria-hidden="true"></div></div>
 <div id="nb" class="hpage">
-<header class="hb"><a class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl">近くの実績</span></header>
+<header class="hb"><a class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl" data-bt="近くの実績">近くの実績</span></header>
 <div class="plate" id="near"><div class="note">現在地を取得しています…</div></div><div class="foot" aria-hidden="true"></div></div>
 
 <script>
@@ -875,12 +878,25 @@ function goHome() { goBack(); }
 $('hbkb').onclick = function (e) { e.preventDefault(); goBack(); };
 [].forEach.call(document.querySelectorAll('.ibk'), function (a) { a.onclick = function (e) { e.preventDefault(); goBack(); }; });
 [].forEach.call(document.querySelectorAll('[data-open]'), function (a) { a.onclick = function (e) { e.preventDefault(); openOv(a.getAttribute('data-open')); }; });
+function brushSync(d) {
+  /* 金色の筆文字：戦略分析官の画面データの中の画像（CSS変数）を借りて、アプリ側のページの見出しにも使う。借りられなければ、従来の文字のまま */
+  try {
+    var cs = d.defaultView.getComputedStyle(d.documentElement), root = document.documentElement, ok = false, bg = cs.getPropertyValue('--hbbg');
+    if (bg && bg.trim()) { root.style.setProperty('--hbbg', bg.trim()); ok = true; }
+    [].forEach.call(document.querySelectorAll('header.hb .ttl[data-bt]'), function (e) {
+      var k = 'bt_' + Array.from(e.getAttribute('data-bt')).map(function (c) { return c.codePointAt(0).toString(16); }).join('_'), v = cs.getPropertyValue('--' + k), a = cs.getPropertyValue('--ar_' + k);
+      if (v && v.trim() && a && a.trim()) { e.style.setProperty('--ar', a.trim()); e.style.setProperty('background-image', v.trim(), 'important'); e.classList.add('bt'); }
+    });
+    root.classList.toggle('brush', ok);
+  } catch (x) {}
+}
 function homeWire() {
   try {
     var f = $('hf'), d = f.contentDocument; if (!d || !d.body || !d.querySelector('.screen')) return;
     var st = d.createElement('style');
     st.textContent = '.nav{padding-bottom:0!important}.screen,#home.screen{padding-bottom:124px!important}.screen:not(#home){padding-top:2px!important}.hbar{height:44px!important;margin-bottom:4px!important}body.kbnav .screen{display:none!important}body.kbnav .screen.kb-on{display:block!important}.hbar .back{visibility:hidden!important}';   /* 画面の切り替え／見出しの「戻る」は、外側の固定ボタンに任せる。上下の安全領域は、外側（表示枠の位置）で扱う＝枠の中には、足さない */
     d.head.appendChild(st);
+    brushSync(d);
     try { d.defaultView.addEventListener('scroll', bksUpdate, { passive: true }); } catch (e) {}
     d.addEventListener('click', function (e) {
       var a = e.target && e.target.closest ? e.target.closest('a') : null; if (!a) return;
@@ -1016,7 +1032,7 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V28</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
+</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V29</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
 function inset(side){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding-'+side+':env(safe-area-inset-'+side+')';document.body.appendChild(d);var k='padding'+side.charAt(0).toUpperCase()+side.slice(1),v=parseFloat(getComputedStyle(d)[k])||0;d.parentNode.removeChild(d);return v}
 function unit(u){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:1px;visibility:hidden;height:'+u;document.body.appendChild(d);var v=Math.round(d.getBoundingClientRect().height);d.parentNode.removeChild(d);return v}
 function mm(q){try{return matchMedia(q).matches?'○':'×'}catch(e){return '?'}}
