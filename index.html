@@ -219,7 +219,7 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 <div class="foot" aria-hidden="true"></div></div>
 <div id="dg" class="hpage">
 <header class="hb"><a class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl">診断</span></header>
-<h3>同期の診断</h3>
+<h3>余白の実測（試験版だけ）</h3><button class="btn2" id="marginlab" type="button">余白の実測を開く（画面のスクリーンショットを撮る）</button><h3>同期の診断</h3>
 <button class="btn2" id="sydg" type="button">同期の診断を表示</button>
 <pre class="note" id="sydgo" style="display:none;white-space:pre-wrap;word-break:break-all;font-size:12px"></pre>
 <h3>端末内の保存の確認</h3>
@@ -1016,4 +1016,40 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V25</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script></body></html>
+</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V28</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
+function inset(side){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding-'+side+':env(safe-area-inset-'+side+')';document.body.appendChild(d);var k='padding'+side.charAt(0).toUpperCase()+side.slice(1),v=parseFloat(getComputedStyle(d)[k])||0;d.parentNode.removeChild(d);return v}
+function unit(u){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:1px;visibility:hidden;height:'+u;document.body.appendChild(d);var v=Math.round(d.getBoundingClientRect().height);d.parentNode.removeChild(d);return v}
+function mm(q){try{return matchMedia(q).matches?'○':'×'}catch(e){return '?'}}
+function openLab(){
+  var old=document.getElementById('mlab');if(old)old.parentNode.removeChild(old);
+  var o=document.createElement('div');o.id='mlab';o.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;background:#1b1b2b;color:#fff;font:12px/1.4 -apple-system,sans-serif;overflow:hidden';
+  var h='<div style="position:fixed;left:0;top:0;right:0;bottom:0;border:3px solid #f33;box-sizing:border-box;pointer-events:none"></div>';
+  var us=[['100vh','#ffd400'],['100dvh','#00e5ff'],['100lvh','#33ff66'],['100svh','#ff9a2e']];
+  us.forEach(function(u,i){h+='<div style="position:fixed;left:'+(i*16+4)+'px;top:0;width:12px;height:'+u[0]+';background:'+u[1]+';opacity:.9"></div>'});
+  for(var y=0;y<=900;y+=50){h+='<div style="position:fixed;left:70px;top:'+y+'px;width:28px;height:1px;background:#fff"></div><div style="position:fixed;left:100px;top:'+(y-6)+'px;font-size:10px;color:#fff">'+y+'</div>'}
+  h+='<div style="position:fixed;right:0;top:0;width:90px;height:10px;background:#f33;color:#fff;font-size:9px">top:0</div>';
+  h+='<div style="position:fixed;right:0;top:env(safe-area-inset-top);width:90px;height:6px;background:#ffd400"></div><div style="position:fixed;right:92px;top:env(safe-area-inset-top);font-size:10px;color:#ffd400">top:env(上の安全領域)</div>';
+  h+='<div style="position:fixed;right:0;bottom:0;width:90px;height:10px;background:#f33;color:#fff;font-size:9px"></div><div style="position:fixed;right:92px;bottom:0;font-size:10px;color:#f66">bottom:0</div>';
+  h+='<div style="position:fixed;right:0;bottom:env(safe-area-inset-bottom);width:90px;height:6px;background:#3af"></div><div style="position:fixed;right:92px;bottom:env(safe-area-inset-bottom);font-size:10px;color:#3af">bottom:env(下の安全領域)</div>';
+  h+='<div id="mlabt" style="position:fixed;left:112px;right:8px;top:56px;background:#0009;padding:6px 8px;border-radius:8px;white-space:pre-wrap;font-size:10.5px;line-height:1.35"></div>';
+  h+='<button id="mlabx" style="position:fixed;left:50%;top:66%;transform:translateX(-50%);font-size:16px;padding:10px 22px;border-radius:10px;border:2px solid #ffd400;background:#061a5a;color:#ffd400">閉じる</button>';
+  o.innerHTML=h;document.body.appendChild(o);
+  function fill(){var vv=window.visualViewport||{},lines=[];
+    lines.push('画面 '+screen.width+'×'+screen.height+'（有効 '+screen.availWidth+'×'+screen.availHeight+'）');
+    lines.push('innerWidth×Height '+innerWidth+'×'+innerHeight+'／outer '+outerWidth+'×'+outerHeight);
+    lines.push('documentElement.clientHeight '+document.documentElement.clientHeight);
+    lines.push('visualViewport '+Math.round(vv.width||0)+'×'+Math.round(vv.height||0)+'／offsetTop '+Math.round(vv.offsetTop||0)+'／scale '+(vv.scale||1));
+    lines.push('安全領域 上 '+inset('top')+'／下 '+inset('bottom')+'／左 '+inset('left')+'／右 '+inset('right'));
+    lines.push('高さの単位 100vh='+unit('100vh')+'／100dvh='+unit('100dvh')+'／100lvh='+unit('100lvh')+'／100svh='+unit('100svh')+'（左の4本の帯＝黄・水・緑・橙）');
+    lines.push('ホーム画面から開いている：navigator.standalone='+navigator.standalone+'／standalone '+mm('(display-mode: standalone)')+'／fullscreen '+mm('(display-mode: fullscreen)')+'／browser '+mm('(display-mode: browser)'));
+    var m=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]'),v=document.querySelector('meta[name="viewport"]');
+    lines.push('ステータスバー指定 '+(m?m.content:'なし')+'／viewport '+(v?v.content:'なし'));
+    lines.push('向き '+(innerWidth>innerHeight?'横':'縦')+'／倍率 '+devicePixelRatio+'／スクロール '+Math.round(scrollY));
+    lines.push('版 '+((document.getElementById('bver')||{}).textContent||''));
+    lines.push('読みかた：赤い枠＝ページが描ける範囲。画面の一番下まで赤い枠が届いていれば、下の余白は、ありません。届かなければ、届かない分が、iPhoneの側で描けない高さです。このまま、画面のスクリーンショットを、送ってください。');
+    var t=document.getElementById('mlabt');if(t)t.textContent=lines.join('\n')}
+  fill();o._iv=setInterval(fill,1000);
+  document.getElementById('mlabx').onclick=function(){clearInterval(o._iv);o.parentNode.removeChild(o)}}
+window.openMarginLab=openLab;
+document.addEventListener('click',function(e){var b=e.target&&e.target.closest?e.target.closest('#marginlab'):null;if(b){e.preventDefault();openLab()}});
+})()</script></body></html>
