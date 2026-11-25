@@ -1112,7 +1112,10 @@ function ogSyncRun() {
 function ogPull(items, ver) {
   return new Promise(function (res) { ogList('', function (all) {
     var have = {}, tomb = {}, bad = 0, i = 0; all.forEach(function (r) { have[r.sha || r.hash] = 1; }); try { JSON.parse(lsGet('kbt_ogdel') || '[]').forEach(function (x) { tomb[x] = 1; }); } catch (e) {}
-    (function nx() { if (i >= items.length) { if (!bad) lsSet('kbt_ogv', ver); return res(); }
+    (function nx() { if (i >= items.length) { if (bad) return res(); lsSet('kbt_ogv', ver);
+      /* Macの一覧から外れた、Mac由来の画像（Macで差し替え・整理された分）は、この端末からも外す。iPhoneで登録した画像は、残す。一覧が空の時は、何もしない */
+      if (!items.length) return res(); var inMan = {}; items.forEach(function (z) { inMan[z.sha] = 1; }); var gone = all.filter(function (r) { return r.src === 'mac' && r.sha && !inMan[r.sha]; }), g = 0;
+      (function dx() { if (g >= gone.length) return res(); ogOp('delete', gone[g++].id, function () { dx(); }); })(); return; }
       var it = items[i++]; if (!it || have[it.sha] || tomb[it.sha] || !/^[0-9a-f]{64}$/.test(it.sha) || !/^\d{4}-\d\d-\d\d$/.test(it.date) || (it.side !== 'front' && it.side !== 'back')) return nx();
       ogNm('orig:' + it.sha).then(function (nm) { return ogGetBin(nm); }).then(function (r) { return r.ok ? r.arrayBuffer() : Promise.reject('bin'); }).then(ogDec).then(function (raw) {
         return crypto.subtle.digest('SHA-256', raw).then(function (h) { if (hexs(h) !== it.sha) return Promise.reject('sha'); ogOp('put', { id: it.date + '|' + it.sha.slice(0, 32), date: it.date, side: it.side, hash: it.sha.slice(0, 32), sha: it.sha, src: 'mac', up: true, mime: 'image/jpeg', blob: new Blob([raw], { type: 'image/jpeg' }), w: 0, h: 0, ts: Date.now() }, function () { nx(); }); });
@@ -1285,7 +1288,7 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V34</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
+</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V35</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
 function inset(side){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding-'+side+':env(safe-area-inset-'+side+')';document.body.appendChild(d);var k='padding'+side.charAt(0).toUpperCase()+side.slice(1),v=parseFloat(getComputedStyle(d)[k])||0;d.parentNode.removeChild(d);return v}
 function unit(u){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:1px;visibility:hidden;height:'+u;document.body.appendChild(d);var v=Math.round(d.getBoundingClientRect().height);d.parentNode.removeChild(d);return v}
 function mm(q){try{return matchMedia(q).matches?'○':'×'}catch(e){return '?'}}
