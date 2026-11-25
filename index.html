@@ -166,11 +166,12 @@ html.brush header.hb{background:var(--hbbg) center/100% 100% no-repeat!important
 html.hm #shotbtn,html.im #shotbtn{top:calc(var(--sat) + 9px)}
 #shotbtn svg{width:18px;height:18px;fill:none;stroke:#FFD34F;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 #shotbtn[disabled]{opacity:.5}
-#ogbar,#ogview{position:fixed!important;left:0;right:0;top:0;bottom:0;z-index:210;background:rgba(2,8,36,.95);display:none;flex-direction:column;gap:10px;padding:calc(var(--sat) + 12px) 14px calc(var(--sab) + 12px);box-sizing:border-box;color:#fff;font-size:14px;overflow:auto}
-#ogbar.on,#ogview.on{display:flex}#ogbar b{font-size:18px;color:#FFE27A}
-.ogm{display:flex;gap:8px}.ogm button,#ogbar .wide,#ogview .wide{flex:1;min-height:46px;border-radius:12px;border:1.5px solid #FFD34F;background:linear-gradient(180deg,#0f3aa0,#061a5a);color:#FFE27A;font-size:16px;font-weight:700}.ogm .pri{background:linear-gradient(180deg,#fff3b0,#FFD34F 55%,#d89a1a);color:#4a2e00}
+#ogbar,#ogview{position:fixed!important;left:0;right:0;top:0;bottom:0;z-index:210;background:#040d29;display:none;flex-direction:column;gap:10px;padding:calc(var(--sat) + 12px) 14px calc(var(--sab) + 12px);box-sizing:border-box;color:#fff;font-size:14px;overflow:auto}
+#ogbar.on,#ogview.on{display:flex}#ogbar .wide,#ogview .wide{flex:none;width:100%}html.mdl #hbk,html.mdl #shotbtn{display:none!important}#ogvz{display:flex;gap:8px;flex:none}#ogvz button{flex:1;height:40px;border-radius:10px;border:1.5px solid #FFD34F;background:#0a2a86;color:#FFE27A;font-size:20px;font-weight:800}#ogbar b{font-size:18px;color:#FFE27A}
+.ogm{display:flex;gap:8px}.ogm{flex:none}.ogm button,#ogbar .wide,#ogview .wide{flex:1 1 0;height:46px;min-height:46px;max-height:46px;border-radius:12px;border:1.5px solid #FFD34F;background:linear-gradient(180deg,#0f3aa0,#061a5a);color:#FFE27A;font-size:16px;font-weight:700}.ogm .pri{background:linear-gradient(180deg,#fff3b0,#FFD34F 55%,#d89a1a);color:#4a2e00}
 .ogmsg{min-height:20px;color:#cfeeff;font-size:13px;line-height:1.5}#ogvi{flex:1;min-height:200px;overflow:auto;-webkit-overflow-scrolling:touch;border:1.5px solid #FFD34F;border-radius:12px;background:#051446;touch-action:pan-x pan-y pinch-zoom}#ogvi img{width:100%;display:block}#ogvi.z img{width:260%;max-width:none}#ogvt{color:#FFE27A;font-weight:700}
-#shotbar{position:fixed!important;left:0;right:0;top:0;bottom:0;z-index:200;background:rgba(2,8,36,.92);display:none;flex-direction:column;align-items:center;padding:calc(var(--sat) + 10px) 14px calc(var(--sab) + 12px);box-sizing:border-box;color:#fff;font-size:14px}
+html.mdl #hbk,html.mdl #shotbtn{display:none!important}
+#shotbar{position:fixed!important;left:0;right:0;top:0;bottom:0;z-index:200;background:#040d29;display:none;flex-direction:column;align-items:center;padding:calc(var(--sat) + 10px) 14px calc(var(--sab) + 12px);box-sizing:border-box;color:#fff;font-size:14px}
 #shotbar.on{display:flex}
 #shotbar .shotimg{flex:1;min-height:0;width:100%;overflow:auto;-webkit-overflow-scrolling:touch;text-align:center;border:1.5px solid #FFD34F;border-radius:12px;background:#051446}
 #shotbar .shotimg img{max-width:100%;height:auto;display:block;margin:0 auto}
@@ -179,6 +180,8 @@ html.hm #shotbtn,html.im #shotbtn{top:calc(var(--sat) + 9px)}
 #shotbar button.pri{background:linear-gradient(180deg,#fff3b0,#FFD34F 55%,#d89a1a);color:#4a2e00}
 #shotbar .shotmsg{min-height:20px;margin-top:8px;text-align:center;color:#cfeeff;font-size:13px}
 #shotbar .shotmode{display:flex;gap:8px;width:100%;margin-bottom:10px}
+/* 下層の見出し：戻るボタンと家紋の間に、すき間を取る */
+.hbar .back~.emb{margin-left:10px!important}
 html.im header.hb{height:44px;border-radius:14px;margin-left:2px;margin-right:2px;margin-bottom:12px}
 #hbk{display:none}
 html.bk body>#hbk:not(#ov){display:block;position:fixed;left:var(--bkl,8px);top:var(--bkt,calc(var(--sat) + 8px));z-index:70;margin:0;padding:0;background:none}
@@ -258,7 +261,7 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 
 <input id="ogf" type="file" accept="image/*" multiple hidden><input id="ogc" type="file" accept="image/*" capture="environment" hidden><input id="ogr" type="file" accept="image/*" hidden>
 <div id="ogbar" role="dialog" aria-label="原本日報を登録"><b id="ogt">原本日報を登録</b><div class="ogm" id="ogside"><button type="button" data-s="front" class="pri">表面</button><button type="button" data-s="back">裏面</button></div><div class="ogm"><button type="button" id="ogcam">カメラで撮影</button><button type="button" id="ogfile">ファイルを選ぶ</button></div><button type="button" id="ogpaste" class="wide">クリップボードから貼り付け</button><div id="ogmsg" class="ogmsg">コピーした画像（スクリーンショットなど）は、「貼り付け」で、写真アプリを通さずに登録できます</div><button type="button" id="ogclose" class="wide">閉じる</button></div>
-<div id="ogview" role="dialog" aria-label="原本日報"><div id="ogvt"></div><div id="ogvi"></div><div id="ogvm" class="ogmsg"></div><div class="ogm"><button type="button" id="ogvcopy">コピー</button><button type="button" id="ogvshare">共有</button></div><div class="ogm"><button type="button" id="ogvrep">差し替え</button><button type="button" id="ogvdel">削除</button></div><button type="button" id="ogvclose" class="wide">閉じる</button></div>
+<div id="ogview" role="dialog" aria-label="原本日報"><div id="ogvt"></div><div id="ogvi"></div><div id="ogvz"><button type="button" id="ogvzo" aria-label="縮小">−</button><button type="button" id="ogvzf">全体</button><button type="button" id="ogvzi" aria-label="拡大">＋</button></div><div id="ogvm" class="ogmsg"></div><div class="ogm"><button type="button" id="ogvcopy">コピー</button><button type="button" id="ogvshare">共有</button></div><div class="ogm"><button type="button" id="ogvrep">差し替え</button><button type="button" id="ogvdel">削除</button></div><button type="button" id="ogvclose" class="wide">閉じる</button></div>
 <button id="shotbtn" type="button" aria-label="画面を撮影（コピー・共有）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.6-2.4h6.8L17 8h3v11H4z"/><circle cx="12" cy="13.2" r="3.6"/></svg></button>
 <div id="shotbar" role="dialog" aria-label="画面の撮影"><div class="shotmode" id="shotmode"><button type="button" data-m="view" class="pri">表示範囲</button><button type="button" data-m="full">画面全体</button></div><div class="shotimg" id="shotimg"></div><div class="shotmsg" id="shotmsg"></div><div class="shotrow" id="shotogrow" style="display:none"><button type="button" id="shotogf">表面の原本に登録</button><button type="button" id="shotogb">裏面の原本に登録</button></div><div class="shotrow"><button type="button" id="shotcopy">コピー</button><button type="button" id="shotshare" class="pri">共有</button><button type="button" id="shotcancel">キャンセル</button></div></div>
 <script>
@@ -769,7 +772,7 @@ function navMeasure() { try { var f = $('hf'), d = f.contentDocument; if (!d) re
 /* ===== 入力データの連携（営業入力 → 営業状況・営業日報・営業分析）。同じ端末の中の記録（entries）から、今日の暫定値を作り、戦略分析官の各画面に、カードとして差し込む。通信なし・オフラインでも動く。日報で確定した値とは、別の欄（暫定）として表示する ===== */
 var LIVE_IDS = { status: ['sum', 'cool'], s1: ['sum', 'cool'], nippo: ['list'], s2: ['list'], settings: ['lk-mg', 'lk-dg'], s4: ['lk-mg', 'lk-dg'], goal: ['lk-gl'], strategy: ['lk-nb'] };
 var LK = { 'lk-mg': ['mg', '同期・バックアップ', '鍵ファイル・最新の確認・バックアップの書き出しと復元・分析パック'], 'lk-dg': ['dg', '診断', '端末内の保存の確認・同期の診断'], 'lk-gl': ['gl', '今日の売上目標（クール別）', 'この端末の入力から、クールごとの目標と実績・必要な売上・休憩'], 'lk-nb': ['nb', 'いま向かうなら（現在地から）', '現在地に近い、過去の実績のある場所'] };
-var LIVE_CSS = '.kb-og .ogg{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}.kb-og .ogg a{display:block;width:84px;text-decoration:none;color:#FFE27A;text-align:center;font-size:12px}.kb-og .ogg img{width:84px;height:84px;object-fit:cover;border:1.5px solid #FFD34F;border-radius:8px;display:block;background:#051446}.kb-og .ogadd{display:block;text-align:center;margin-top:6px;padding:10px;border:1.5px solid #FFD34F;border-radius:10px;color:#FFE27A;text-decoration:none;font-weight:700;font-size:14px}' + '.kb-live{border:1.5px solid rgba(255,211,79,.85);border-radius:14px;background:rgba(5,20,78,.95);padding:8px 12px;margin:0 0 8px;color:#fff;font-size:14px;line-height:1.65;text-shadow:none;position:relative;z-index:1}.kb-live h3{margin:0 0 4px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;border-radius:0!important;min-height:0!important;font-size:15px!important;line-height:1.4!important;color:#FFE27A;font-weight:800;letter-spacing:.02em}.kb-live .kv{display:flex;justify-content:space-between;gap:8px;border-top:1px solid rgba(255,255,255,.12);padding:3px 0}.kb-live .kv:first-of-type{border-top:0}.kb-live .kv b{color:#fff;font-weight:800}.kb-live .sm{font-size:12px;color:#cfe0ff;margin-top:6px}.kb-live .neg{color:#ff8a7a}.kb-live .pos{color:#8fe3a0}.kb-ov{display:block;text-decoration:none!important;color:#fff!important}.kb-ov .go{display:block;text-align:right;color:#FFE27A;font-weight:800;margin-top:4px}';
+var LIVE_CSS = '.kb-og .ogg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0}.kb-og .ogg h4{margin:0 0 4px;font-size:13px;color:#FFE27A;text-align:center}.kb-og .ogc{min-width:0}.kb-og .ogg a{display:block;margin:0 0 6px;text-decoration:none}.kb-og .ogg img{width:100%;aspect-ratio:3/4;object-fit:cover;border:1.5px solid #FFD34F;border-radius:8px;display:block;background:#051446}.kb-og .ogadd{display:block;text-align:center;margin-top:6px;padding:10px;border:1.5px solid #FFD34F;border-radius:10px;color:#FFE27A;text-decoration:none;font-weight:700;font-size:14px}' + '.kb-live{border:1.5px solid rgba(255,211,79,.85);border-radius:14px;background:rgba(5,20,78,.95);padding:8px 12px;margin:0 0 8px;color:#fff;font-size:14px;line-height:1.65;text-shadow:none;position:relative;z-index:1}.kb-live h3{margin:0 0 4px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;border-radius:0!important;min-height:0!important;font-size:15px!important;line-height:1.4!important;color:#FFE27A;font-weight:800;letter-spacing:.02em}.kb-live .kv{display:flex;justify-content:space-between;gap:8px;border-top:1px solid rgba(255,255,255,.12);padding:3px 0}.kb-live .kv:first-of-type{border-top:0}.kb-live .kv b{color:#fff;font-weight:800}.kb-live .sm{font-size:12px;color:#cfe0ff;margin-top:6px}.kb-live .neg{color:#ff8a7a}.kb-live .pos{color:#8fe3a0}.kb-ov{display:block;text-decoration:none!important;color:#fff!important}.kb-ov .go{display:block;text-align:right;color:#FFE27A;font-weight:800;margin-top:4px}';
 function liveStats() {
   var d = today(), l = entries(d).filter(function (e) { return !e.deleted; }), o = { date: d, rows: l, go: 0, te: 0, id: 0, ia: 0, tot: 0, cool: [0, 1, 2, 3].map(function () { return { n: 0, s: 0, i: 0 }; }) };
   l.forEach(function (e) {
@@ -963,7 +966,8 @@ function shotRender(full, cb) {
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(o.svg);
 }
 function shotClear() { if (SHOT.url) { try { URL.revokeObjectURL(SHOT.url); } catch (e) {} } SHOT.url = ''; SHOT.blob = null; $('shotimg').innerHTML = ''; $('shotmsg').textContent = ''; }
-function shotClose() { shotClear(); $('shotbar').classList.remove('on'); SHOT.busy = false; $('shotbtn').disabled = false; }
+function mdlSet() { document.documentElement.classList.toggle('mdl', !!document.querySelector('#shotbar.on,#ogbar.on,#ogview.on')); }
+function shotClose() { shotClear(); $('shotbar').classList.remove('on'); mdlSet(); SHOT.busy = false; $('shotbtn').disabled = false; }
 function shotMsg(t) { $('shotmsg').textContent = t || ''; }
 function shotMake(full) {
   SHOT.mode = full ? 'full' : 'view'; shotClear(); shotMsg('撮影しています…'); SHOT.busy = true;
@@ -975,7 +979,7 @@ function shotMake(full) {
     var im = new Image(); im.alt = '撮影した画面（長押しでも、コピー・共有できます）'; im.src = SHOT.url; $('shotimg').innerHTML = ''; $('shotimg').appendChild(im); shotMsg('');
   });
 }
-function shotOpen() { if (SHOT.busy) return; var nd = /^nd-\d{4}-\d\d-\d\d$/.test(SY.cur || '') && document.documentElement.classList.contains('hm'); SHOT.nd = nd ? SY.cur.slice(3) : ''; $('shotogrow').style.display = nd ? 'flex' : 'none'; $('shotbar').classList.add('on'); shotMake(false); }
+function shotOpen() { if (SHOT.busy) return; var nd = /^nd-\d{4}-\d\d-\d\d$/.test(SY.cur || '') && document.documentElement.classList.contains('hm'); SHOT.nd = nd ? SY.cur.slice(3) : ''; $('shotogrow').style.display = nd ? 'flex' : 'none'; $('shotbar').classList.add('on'); mdlSet(); shotMake(false); }
 $('shotbtn').onclick = function (e) { e.preventDefault(); shotOpen(); };
 $('shotmode').onclick = function (e) { var b = e.target.closest ? e.target.closest('button') : null; if (b && !SHOT.busy) shotMake(b.getAttribute('data-m') === 'full'); };
 $('shotcancel').onclick = shotClose;
@@ -1026,7 +1030,7 @@ function ogAdd(blobs, side, date, done) {
         seen[p.hash] = date; ogOp('put', { id: date + '|' + p.hash, date: date, side: side, hash: p.hash, mime: 'image/jpeg', blob: p.blob, w: p.w, h: p.h, ts: Date.now() }, function (ok) { if (ok) added++; else bad++; next(); }); }); })(); });
 }
 function ogMsg(t) { $('ogmsg').textContent = t; }
-function ogOpen(date) { OG.date = date; $('ogt').textContent = '原本日報を登録（' + Number(date.slice(5, 7)) + '/' + Number(date.slice(8, 10)) + '）'; ogSide('front'); $('ogbar').classList.add('on'); ogMsg('コピーした画像（スクリーンショットなど）は、「貼り付け」で、写真アプリを通さずに登録できます'); }
+function ogOpen(date) { OG.date = date; $('ogt').textContent = '原本日報を登録（' + Number(date.slice(5, 7)) + '/' + Number(date.slice(8, 10)) + '）'; ogSide('front'); $('ogbar').classList.add('on'); mdlSet(); ogMsg('コピーした画像（スクリーンショットなど）は、「貼り付け」で、写真アプリを通さずに登録できます'); }
 function ogSide(sd) { OG.side = sd; [].forEach.call($('ogside').querySelectorAll('button'), function (b) { b.className = b.getAttribute('data-s') === sd ? 'pri' : ''; }); }
 function ogReport(a, d, b) { if (a) setTimeout(ogSyncRun, 300); ogMsg((a ? a + '枚を登録しました。' : '') + (d ? d + '枚は、すでに登録済みのため、登録しませんでした。' : '') + (b ? b + '枚は、読み込めませんでした。' : '') + (!a && !d && !b ? '画像がありません' : '')); ogRefresh(); }
 function ogPick(list) { var a = []; for (var i = 0; i < list.length; i++) if (list[i] && /^image\//.test(list[i].type || 'image/jpeg')) a.push(list[i]); if (!a.length) { ogMsg('画像が見つかりませんでした'); return; } ogMsg('登録しています…'); ogAdd(a, OG.side, OG.date, ogReport); }
@@ -1038,7 +1042,7 @@ $('ogpaste').onclick = function () {
   navigator.clipboard.read().then(function (items) { var ps = []; items.forEach(function (it) { it.types.forEach(function (t) { if (/^image\//.test(t)) ps.push(it.getType(t)); }); }); if (!ps.length) { ogMsg('クリップボードに、画像がありません'); return; } return Promise.all(ps).then(ogPick); }).catch(function () { ogMsg('貼り付けできませんでした（許可が必要です）。「ファイルを選ぶ」を使ってください'); });
 };
 document.addEventListener('paste', function (e) { if (!$('ogbar').classList.contains('on')) return; var f = []; [].forEach.call((e.clipboardData && e.clipboardData.files) || [], function (x) { f.push(x); }); if (f.length) { e.preventDefault(); ogPick(f); } });
-$('ogclose').onclick = function () { $('ogbar').classList.remove('on'); };
+$('ogclose').onclick = function () { $('ogbar').classList.remove('on'); mdlSet(); };
 function ogRefresh() { try { var d = $('hf').contentDocument; if (d) ogInject(d); } catch (e) {} }
 function ogInject(d) {
   /* 日別詳細（nd-日付）に「原本日報」の欄：表面・裏面のサムネイル（保存済みの画像）＋追加 */
@@ -1047,15 +1051,20 @@ function ogInject(d) {
     var old = sc.querySelector('.kb-og'); if (old) old.parentNode.removeChild(old);
     var date = sc.id.slice(3), box = d.createElement('div'); box.className = 'kb-live kb-og'; box.innerHTML = '<h3>原本日報</h3><div class="ogg"></div><a class="ogadd" href="#" data-og="add" data-date="' + date + '">＋ 原本を追加（カメラ・ファイル・貼り付け）</a>';
     var hb = sc.querySelector('.hbar'); sc.insertBefore(box, hb ? hb.nextSibling : sc.firstChild);
-    ogList(date, function (rs) { var g = box.querySelector('.ogg'); if (!rs.length) { g.innerHTML = '<div class="sm">まだ登録がありません</div>'; return; } rs.forEach(function (r) { var u = URL.createObjectURL(r.blob); OG.urls.push(u); var a = d.createElement('a'); a.href = '#'; a.setAttribute('data-og', 'view'); a.setAttribute('data-id', r.id); a.innerHTML = '<img alt="原本日報" src="' + u + '"><span>' + (r.side === 'back' ? '裏面' : '表面') + '</span>'; g.appendChild(a); }); });
+    ogList(date, function (rs) { var g = box.querySelector('.ogg'); if (!rs.length) { g.innerHTML = '<div class="sm">まだ登録がありません</div>'; return; } g.innerHTML = '<div class="ogc" data-s="front"><h4>表面</h4></div><div class="ogc" data-s="back"><h4>裏面</h4></div>'; rs.forEach(function (r) { var u = URL.createObjectURL(r.blob); OG.urls.push(u); var a = d.createElement('a'); a.href = '#'; a.setAttribute('data-og', 'view'); a.setAttribute('data-id', r.id); a.innerHTML = '<img alt="原本日報" src="' + u + '">'; g.querySelector('[data-s=' + (r.side === 'back' ? 'back' : 'front') + ']').appendChild(a); }); [].forEach.call(g.querySelectorAll('.ogc'), function (c) { if (!c.querySelector('a')) { var n = d.createElement('div'); n.className = 'sm'; n.textContent = 'なし'; c.appendChild(n); } }); });
   });
 }
 function ogView(id) {
   ogDb(function (db) { if (!db) return; var r = db.transaction('o').objectStore('o').get(id); r.onsuccess = function () { var v = ogRec(r.result); if (!v) return; OG.cur = v; var u = URL.createObjectURL(v.blob); OG.urls.push(u);
-    $('ogvt').textContent = Number(v.date.slice(5, 7)) + '/' + Number(v.date.slice(8, 10)) + ' の原本日報（' + (v.side === 'back' ? '裏面' : '表面') + '）'; $('ogvi').className = ''; $('ogvi').innerHTML = '<img alt="原本日報" src="' + u + '">'; $('ogvm').textContent = '画像をタップすると、拡大します'; $('ogview').classList.add('on'); }; });
+    $('ogvt').textContent = Number(v.date.slice(5, 7)) + '/' + Number(v.date.slice(8, 10)) + ' の原本日報（' + (v.side === 'back' ? '裏面' : '表面') + '）';  $('ogvi').innerHTML = '<img alt="原本日報" src="' + u + '">'; $('ogvm').textContent = '画像をタップすると、拡大します'; $('ogview').classList.add('on'); mdlSet(); OG.z = 100; ogZoom(0); }; });
 }
-$('ogvi').onclick = function () { this.classList.toggle('z'); };
-$('ogvclose').onclick = function () { $('ogview').classList.remove('on'); $('ogvi').innerHTML = ''; OG.cur = null; ogRefresh(); };
+function ogZoom(d, abs) { OG.z = Math.max(100, Math.min(500, abs ? d : (OG.z || 100) + d)); var im = $('ogvi').querySelector('img'); if (im) { im.style.width = OG.z + '%'; im.style.maxWidth = 'none'; } $('ogvm').textContent = '倍率 ' + (OG.z / 100) + '倍（＋ − ボタン・2本指の操作・画像のタップで、拡大・縮小できます）'; }
+$('ogvi').onclick = function () { ogZoom(OG.z > 100 ? 100 : 260, 1); };
+$('ogvzi').onclick = function () { ogZoom(60); }; $('ogvzo').onclick = function () { ogZoom(-60); }; $('ogvzf').onclick = function () { ogZoom(100, 1); };
+(function () { var d0 = 0, z0 = 100; var el = $('ogvi'); el.addEventListener('touchstart', function (e) { if (e.touches.length === 2) { d0 = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); z0 = OG.z || 100; } }, { passive: true });
+  el.addEventListener('touchmove', function (e) { if (e.touches.length === 2 && d0) { e.preventDefault(); ogZoom(z0 * Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY) / d0, 1); } }, { passive: false });
+  el.addEventListener('touchend', function () { d0 = 0; }, { passive: true }); })();
+$('ogvclose').onclick = function () { $('ogview').classList.remove('on'); mdlSet(); $('ogvi').innerHTML = ''; OG.cur = null; ogRefresh(); };
 $('ogvcopy').onclick = function () { if (!OG.cur) return; var b = OG.cur.blob; (function () { if (!(navigator.clipboard && window.ClipboardItem)) return Promise.reject(); var c = document.createElement('canvas'), im = $('ogvi').querySelector('img'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); return new Promise(function (res) { c.toBlob(res, 'image/png'); }).then(function (png) { return navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]); }); })().then(function () { $('ogvm').textContent = 'コピーしました'; }, function () { $('ogvm').textContent = 'この環境では、コピーできません。「共有」か、画像の長押しを使ってください'; }); };
 $('ogvshare').onclick = function () { if (!OG.cur) return; try { var f = new File([OG.cur.blob], 'genpon-' + OG.cur.date + '.' + OG.cur.blob.type.split('/')[1], { type: OG.cur.blob.type }); if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f] }).catch(function () {}); else $('ogvm').textContent = 'この環境では、共有に対応していません。画像の長押しを使ってください'; } catch (e) { $('ogvm').textContent = '共有できませんでした'; } };
 $('ogvdel').onclick = function () { if (!OG.cur) return; if (!confirm('この原本画像を、削除しますか？（元に戻せません）')) return; var tomb = []; try { tomb = JSON.parse(lsGet('kbt_ogdel') || '[]'); } catch (e) {} if (OG.cur.sha) { tomb.push(OG.cur.sha); lsSet('kbt_ogdel', JSON.stringify(tomb.slice(-500))); }
@@ -1276,7 +1285,7 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V33</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
+</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V34</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
 function inset(side){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding-'+side+':env(safe-area-inset-'+side+')';document.body.appendChild(d);var k='padding'+side.charAt(0).toUpperCase()+side.slice(1),v=parseFloat(getComputedStyle(d)[k])||0;d.parentNode.removeChild(d);return v}
 function unit(u){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:1px;visibility:hidden;height:'+u;document.body.appendChild(d);var v=Math.round(d.getBoundingClientRect().height);d.parentNode.removeChild(d);return v}
 function mm(q){try{return matchMedia(q).matches?'○':'×'}catch(e){return '?'}}
