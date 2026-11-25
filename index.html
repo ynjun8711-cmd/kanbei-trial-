@@ -161,6 +161,24 @@ html.im header.hb .emb{margin:0 8px 0 6px;width:40px;height:40px}
 /* 金色の筆文字の見出し（2026-11-25）：画像は、戦略分析官（Mac→iPhoneの画面データ）の中のものを借りる（画像の置き場は1つ・この本体は、大きくならない）。借りられない間は、従来の文字 */
 .ttl.bt{display:block;font-size:0!important;line-height:0!important;color:transparent!important;-webkit-text-fill-color:transparent;background-color:transparent;background-clip:border-box!important;-webkit-background-clip:border-box!important;background-repeat:no-repeat!important;background-position:left center!important;background-size:contain!important;-webkit-text-stroke:0!important;filter:none!important;letter-spacing:0!important;text-shadow:none!important;height:38px;width:calc(38px * var(--ar,3));max-width:calc(100% - 118px);flex:none}
 html.brush header.hb{background:var(--hbbg) center/100% 100% no-repeat!important;border:0!important;box-shadow:none!important}
+/* 画面の撮影（カメラ）：右上の小さな丸いボタン。見出しの右端（富士と桜の飾りの上）に置く＝題字・家紋・戻るには重ならない。画面の高さ・下部メニューの位置は、変えない */
+#shotbtn{position:fixed!important;right:16px;top:calc(var(--sat) + 25px);width:30px;height:30px;padding:0;border-radius:50%;border:1.5px solid #FFD34F;background:radial-gradient(circle at 35% 30%,#1b3f9e,#061a5a);box-shadow:0 0 0 1px #04123f,0 2px 6px rgba(0,10,50,.6);z-index:80;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:rgba(255,211,79,.3)}
+html.hm #shotbtn,html.im #shotbtn{top:calc(var(--sat) + 9px)}
+#shotbtn svg{width:18px;height:18px;fill:none;stroke:#FFD34F;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#shotbtn[disabled]{opacity:.5}
+#ogbar,#ogview{position:fixed!important;left:0;right:0;top:0;bottom:0;z-index:210;background:rgba(2,8,36,.95);display:none;flex-direction:column;gap:10px;padding:calc(var(--sat) + 12px) 14px calc(var(--sab) + 12px);box-sizing:border-box;color:#fff;font-size:14px;overflow:auto}
+#ogbar.on,#ogview.on{display:flex}#ogbar b{font-size:18px;color:#FFE27A}
+.ogm{display:flex;gap:8px}.ogm button,#ogbar .wide,#ogview .wide{flex:1;min-height:46px;border-radius:12px;border:1.5px solid #FFD34F;background:linear-gradient(180deg,#0f3aa0,#061a5a);color:#FFE27A;font-size:16px;font-weight:700}.ogm .pri{background:linear-gradient(180deg,#fff3b0,#FFD34F 55%,#d89a1a);color:#4a2e00}
+.ogmsg{min-height:20px;color:#cfeeff;font-size:13px;line-height:1.5}#ogvi{flex:1;min-height:200px;overflow:auto;-webkit-overflow-scrolling:touch;border:1.5px solid #FFD34F;border-radius:12px;background:#051446;touch-action:pan-x pan-y pinch-zoom}#ogvi img{width:100%;display:block}#ogvi.z img{width:260%;max-width:none}#ogvt{color:#FFE27A;font-weight:700}
+#shotbar{position:fixed!important;left:0;right:0;top:0;bottom:0;z-index:200;background:rgba(2,8,36,.92);display:none;flex-direction:column;align-items:center;padding:calc(var(--sat) + 10px) 14px calc(var(--sab) + 12px);box-sizing:border-box;color:#fff;font-size:14px}
+#shotbar.on{display:flex}
+#shotbar .shotimg{flex:1;min-height:0;width:100%;overflow:auto;-webkit-overflow-scrolling:touch;text-align:center;border:1.5px solid #FFD34F;border-radius:12px;background:#051446}
+#shotbar .shotimg img{max-width:100%;height:auto;display:block;margin:0 auto}
+#shotbar .shotrow{display:flex;gap:8px;width:100%;margin-top:10px}
+#shotbar button{flex:1;min-height:46px;border-radius:12px;border:1.5px solid #FFD34F;background:linear-gradient(180deg,#0f3aa0,#061a5a);color:#FFE27A;font-size:16px;font-weight:700}
+#shotbar button.pri{background:linear-gradient(180deg,#fff3b0,#FFD34F 55%,#d89a1a);color:#4a2e00}
+#shotbar .shotmsg{min-height:20px;margin-top:8px;text-align:center;color:#cfeeff;font-size:13px}
+#shotbar .shotmode{display:flex;gap:8px;width:100%;margin-bottom:10px}
 html.im header.hb{height:44px;border-radius:14px;margin-left:2px;margin-right:2px;margin-bottom:12px}
 #hbk{display:none}
 html.bk body>#hbk:not(#ov){display:block;position:fixed;left:var(--bkl,8px);top:var(--bkt,calc(var(--sat) + 8px));z-index:70;margin:0;padding:0;background:none}
@@ -210,6 +228,7 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 <h3>バックアップ・Macへ送る</h3>
 <button class="btn2" id="exp" type="button">Macへ送る（入力ファイルを書き出す）</button>
 <button class="btn2" id="bak" type="button">全データのバックアップを書き出す</button>
+<button class="btn2" id="ogexp" type="button">原本日報の画像を書き出す（Macへ送る・バックアップ）</button>
 <button class="btn2" id="imp" type="button">バックアップから戻す</button>
 <input id="impf" type="file" accept=".json,.txt,application/json,text/plain" hidden>
 <textarea id="out" readonly hidden></textarea>
@@ -224,7 +243,7 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 <header class="hb"><a class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl" data-bt="診断">診断</span></header>
 <h3>余白の実測（試験版だけ）</h3><button class="btn2" id="marginlab" type="button">余白の実測を開く（画面のスクリーンショットを撮る）</button><h3>同期の診断</h3>
 <button class="btn2" id="sydg" type="button">同期の診断を表示</button>
-<pre class="note" id="sydgo" style="display:none;white-space:pre-wrap;word-break:break-all;font-size:12px"></pre>
+<pre class="note" id="sydgo" data-noshot style="display:none;white-space:pre-wrap;word-break:break-all;font-size:12px"></pre>
 <h3>端末内の保存の確認</h3>
 <div class="plate" id="diag"><div class="note">確認中…</div></div>
 <button class="btn2" id="st" type="button">保存テストを書き込む（確認用・営業データには入りません）</button>
@@ -237,6 +256,11 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 <header class="hb"><a class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl" data-bt="近くの実績">近くの実績</span></header>
 <div class="plate" id="near"><div class="note">現在地を取得しています…</div></div><div class="foot" aria-hidden="true"></div></div>
 
+<input id="ogf" type="file" accept="image/*" multiple hidden><input id="ogc" type="file" accept="image/*" capture="environment" hidden><input id="ogr" type="file" accept="image/*" hidden>
+<div id="ogbar" role="dialog" aria-label="原本日報を登録"><b id="ogt">原本日報を登録</b><div class="ogm" id="ogside"><button type="button" data-s="front" class="pri">表面</button><button type="button" data-s="back">裏面</button></div><div class="ogm"><button type="button" id="ogcam">カメラで撮影</button><button type="button" id="ogfile">ファイルを選ぶ</button></div><button type="button" id="ogpaste" class="wide">クリップボードから貼り付け</button><div id="ogmsg" class="ogmsg">コピーした画像（スクリーンショットなど）は、「貼り付け」で、写真アプリを通さずに登録できます</div><button type="button" id="ogclose" class="wide">閉じる</button></div>
+<div id="ogview" role="dialog" aria-label="原本日報"><div id="ogvt"></div><div id="ogvi"></div><div id="ogvm" class="ogmsg"></div><div class="ogm"><button type="button" id="ogvcopy">コピー</button><button type="button" id="ogvshare">共有</button></div><div class="ogm"><button type="button" id="ogvrep">差し替え</button><button type="button" id="ogvdel">削除</button></div><button type="button" id="ogvclose" class="wide">閉じる</button></div>
+<button id="shotbtn" type="button" aria-label="画面を撮影（コピー・共有）"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.6-2.4h6.8L17 8h3v11H4z"/><circle cx="12" cy="13.2" r="3.6"/></svg></button>
+<div id="shotbar" role="dialog" aria-label="画面の撮影"><div class="shotmode" id="shotmode"><button type="button" data-m="view" class="pri">表示範囲</button><button type="button" data-m="full">画面全体</button></div><div class="shotimg" id="shotimg"></div><div class="shotmsg" id="shotmsg"></div><div class="shotrow"><button type="button" id="shotcopy">コピー</button><button type="button" id="shotshare" class="pri">共有</button><button type="button" id="shotcancel">キャンセル</button></div></div>
 <script>
 /* 官兵衛 営業入力（iPhone単体版）。入力・保存・集計・修正・削除・リセットは、すべて、この端末の中だけで動く（通信しない）。保存先：端末内（localStorage＋IndexedDB の二重）。 */
 var G = 84000, TAX = 1.1, DAY_CHANGE_HOUR = 6, KEYS = { e: 'kbt_events', r: 'kbt_resets', b: 'kbt_backups', k: 'kbt_kind', x: 'kbt_exported' };
@@ -745,7 +769,7 @@ function navMeasure() { try { var f = $('hf'), d = f.contentDocument; if (!d) re
 /* ===== 入力データの連携（営業入力 → 営業状況・営業日報・営業分析）。同じ端末の中の記録（entries）から、今日の暫定値を作り、戦略分析官の各画面に、カードとして差し込む。通信なし・オフラインでも動く。日報で確定した値とは、別の欄（暫定）として表示する ===== */
 var LIVE_IDS = { status: ['sum', 'cool'], s1: ['sum', 'cool'], nippo: ['list'], s2: ['list'], settings: ['lk-mg', 'lk-dg'], s4: ['lk-mg', 'lk-dg'], goal: ['lk-gl'], strategy: ['lk-nb'] };
 var LK = { 'lk-mg': ['mg', '同期・バックアップ', '鍵ファイル・最新の確認・バックアップの書き出しと復元・分析パック'], 'lk-dg': ['dg', '診断', '端末内の保存の確認・同期の診断'], 'lk-gl': ['gl', '今日の売上目標（クール別）', 'この端末の入力から、クールごとの目標と実績・必要な売上・休憩'], 'lk-nb': ['nb', 'いま向かうなら（現在地から）', '現在地に近い、過去の実績のある場所'] };
-var LIVE_CSS = '.kb-live{border:1.5px solid rgba(255,211,79,.85);border-radius:14px;background:rgba(5,20,78,.95);padding:8px 12px;margin:0 0 8px;color:#fff;font-size:14px;line-height:1.65;text-shadow:none;position:relative;z-index:1}.kb-live h3{margin:0 0 4px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;border-radius:0!important;min-height:0!important;font-size:15px!important;line-height:1.4!important;color:#FFE27A;font-weight:800;letter-spacing:.02em}.kb-live .kv{display:flex;justify-content:space-between;gap:8px;border-top:1px solid rgba(255,255,255,.12);padding:3px 0}.kb-live .kv:first-of-type{border-top:0}.kb-live .kv b{color:#fff;font-weight:800}.kb-live .sm{font-size:12px;color:#cfe0ff;margin-top:6px}.kb-live .neg{color:#ff8a7a}.kb-live .pos{color:#8fe3a0}.kb-ov{display:block;text-decoration:none!important;color:#fff!important}.kb-ov .go{display:block;text-align:right;color:#FFE27A;font-weight:800;margin-top:4px}';
+var LIVE_CSS = '.kb-og .ogg{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}.kb-og .ogg a{display:block;width:84px;text-decoration:none;color:#FFE27A;text-align:center;font-size:12px}.kb-og .ogg img{width:84px;height:84px;object-fit:cover;border:1.5px solid #FFD34F;border-radius:8px;display:block;background:#051446}.kb-og .ogadd{display:block;text-align:center;margin-top:6px;padding:10px;border:1.5px solid #FFD34F;border-radius:10px;color:#FFE27A;text-decoration:none;font-weight:700;font-size:14px}' + '.kb-live{border:1.5px solid rgba(255,211,79,.85);border-radius:14px;background:rgba(5,20,78,.95);padding:8px 12px;margin:0 0 8px;color:#fff;font-size:14px;line-height:1.65;text-shadow:none;position:relative;z-index:1}.kb-live h3{margin:0 0 4px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;border-radius:0!important;min-height:0!important;font-size:15px!important;line-height:1.4!important;color:#FFE27A;font-weight:800;letter-spacing:.02em}.kb-live .kv{display:flex;justify-content:space-between;gap:8px;border-top:1px solid rgba(255,255,255,.12);padding:3px 0}.kb-live .kv:first-of-type{border-top:0}.kb-live .kv b{color:#fff;font-weight:800}.kb-live .sm{font-size:12px;color:#cfe0ff;margin-top:6px}.kb-live .neg{color:#ff8a7a}.kb-live .pos{color:#8fe3a0}.kb-ov{display:block;text-decoration:none!important;color:#fff!important}.kb-ov .go{display:block;text-align:right;color:#FFE27A;font-weight:800;margin-top:4px}';
 function liveStats() {
   var d = today(), l = entries(d).filter(function (e) { return !e.deleted; }), o = { date: d, rows: l, go: 0, te: 0, id: 0, ia: 0, tot: 0, cool: [0, 1, 2, 3].map(function () { return { n: 0, s: 0, i: 0 }; }) };
   l.forEach(function (e) {
@@ -776,7 +800,8 @@ function liveInject() {
   try {
     var f = $('hf'), d = f.contentDocument; if (!d || !d.body) return;
     if (!d.getElementById('kb-live-css')) { var st = d.createElement('style'); st.id = 'kb-live-css'; st.textContent = LIVE_CSS; d.head.appendChild(st); }
-    var old = d.querySelectorAll('.kb-live'); for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+    var old = d.querySelectorAll('.kb-live:not(.kb-og)'); for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+    try { ogInject(d); } catch (e) {}
     for (var id in LIVE_IDS) {
       var sc = d.getElementById(id); if (!sc || !sc.classList || !sc.classList.contains('screen')) continue;
       var hb = sc.querySelector('.hbar'), at = hb ? hb.nextSibling : sc.firstChild;
@@ -890,6 +915,158 @@ function brushSync(d) {
     root.classList.toggle('brush', ok);
   } catch (x) {}
 }
+
+/* ===== 画面の撮影（2026-11-25）：いまの画面を画像にして、コピー・共有する。写真アプリには、自動保存しない。画像は、この画面の中の一時データ（閉じると破棄）。鍵・認証情報（data-noshot・ファイル選択・入力欄）は、画像に入れない ===== */
+var SHOT = { blob: null, url: '', mode: 'view', busy: false };
+function shotTarget() {
+  var c = document.documentElement.classList;
+  if (c.contains('hm')) { var f = $('hf'), d = f && f.contentDocument; if (d && d.documentElement) return { doc: d, win: d.defaultView, kind: 'frame', w: d.documentElement.clientWidth, vh: f.clientHeight }; }
+  var ov = c.contains('im') ? $(document.documentElement.getAttribute('data-ovp') || 'iv') : null;
+  return { doc: document, win: window, kind: 'host', ov: ov, w: document.documentElement.clientWidth, vh: window.innerHeight };
+}
+function shotSvg(full) {
+  var T = shotTarget(), html = T.doc.documentElement.cloneNode(true), i, el, ph;
+  [].forEach.call(html.querySelectorAll('script,iframe,#shotbtn,#shotbar,#hbk,#bver,#mlab,link[rel=manifest]'), function (e) { e.parentNode.removeChild(e); });
+  [].forEach.call(html.querySelectorAll('[data-noshot],input[type=file],input[type=password],textarea'), function (e) { var b = T.doc.createElement('div'); b.setAttribute('style', 'padding:8px 10px;margin:6px 0;border:1px dashed #FFD34F;border-radius:8px;color:#FFD34F;font-size:12px'); b.textContent = '（非公開の項目：画像には入れません）'; if (e.parentNode) e.parentNode.replaceChild(b, e); });
+  var H, W = T.w, body = html.querySelector('body');
+  if (T.kind === 'frame') {
+    var sy = T.win.scrollY || 0; H = full ? Math.max(T.doc.documentElement.scrollHeight, T.vh) : T.vh;
+    html.setAttribute('style', 'width:' + W + 'px;height:' + H + 'px;margin:0;margin-top:' + (full ? 0 : -sy) + 'px;overflow:' + (full ? 'visible' : 'hidden'));
+    if (full) { body.style.minHeight = H + 'px'; }
+  } else {
+    var ovc = T.ov ? html.querySelector('#' + T.ov.id) : null, st = T.ov ? T.ov.scrollTop : 0;
+    if (ovc) {
+      if (full) { H = Math.max(T.ov.scrollHeight + 8, T.vh); ovc.style.cssText += ';position:absolute!important;top:0!important;bottom:auto!important;height:auto!important;overflow:visible!important'; }
+      else { H = T.vh; ovc.innerHTML = '<div style="transform:translateY(' + (-st) + 'px)">' + ovc.innerHTML + '</div>'; }
+    } else { H = full ? Math.max(document.documentElement.scrollHeight, T.vh) : T.vh; if (!full) body.style.marginTop = (-(window.scrollY || 0)) + 'px'; }
+    html.setAttribute('style', 'width:' + W + 'px;height:' + H + 'px;overflow:hidden');
+    body.style.cssText += ';overflow:visible!important;height:' + H + 'px;position:relative';
+  }
+  var xml = new XMLSerializer().serializeToString(html);
+  return { svg: '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '"><foreignObject x="0" y="0" width="' + W + '" height="' + H + '">' + xml + '</foreignObject></svg>', w: W, h: H };
+}
+function shotRender(full, cb) {
+  /* 画面→SVG（foreignObject）→画像→canvas→PNG。失敗したら cb(null, 理由) */
+  var o; try { o = shotSvg(full); } catch (e) { cb(null, '画面を読み取れませんでした'); return; }
+  var sc = Math.min(Math.max(window.devicePixelRatio || 2, 2), 3); while (o.w * sc * o.h * sc > 16e6 && sc > 1) sc -= 0.5;
+  var img = new Image(), done = false, t = setTimeout(function () { if (!done) { done = true; cb(null, '時間内に画像にできませんでした'); } }, 25000);
+  img.onload = function () {
+    if (done) return; done = true; clearTimeout(t);
+    try {
+      var cv = document.createElement('canvas'); cv.width = Math.round(o.w * sc); cv.height = Math.round(o.h * sc);
+      var g = cv.getContext('2d'); g.fillStyle = '#051446'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(img, 0, 0, cv.width, cv.height);
+      cv.toBlob(function (b) { cb(b, b ? '' : '画像を作れませんでした'); }, 'image/png');
+    } catch (e) { cb(null, 'この環境では、画面を画像にできません（' + (e && e.name || '') + '）'); }
+  };
+  img.onerror = function () { if (!done) { done = true; clearTimeout(t); cb(null, '画面を画像にできませんでした'); } };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(o.svg);
+}
+function shotClear() { if (SHOT.url) { try { URL.revokeObjectURL(SHOT.url); } catch (e) {} } SHOT.url = ''; SHOT.blob = null; $('shotimg').innerHTML = ''; $('shotmsg').textContent = ''; }
+function shotClose() { shotClear(); $('shotbar').classList.remove('on'); SHOT.busy = false; $('shotbtn').disabled = false; }
+function shotMsg(t) { $('shotmsg').textContent = t || ''; }
+function shotMake(full) {
+  SHOT.mode = full ? 'full' : 'view'; shotClear(); shotMsg('撮影しています…'); SHOT.busy = true;
+  [].forEach.call($('shotmode').querySelectorAll('button'), function (b) { b.className = (b.getAttribute('data-m') === SHOT.mode) ? 'pri' : ''; });
+  shotRender(full, function (b, why) {
+    SHOT.busy = false;
+    if (!b) { shotMsg(why + '。いまの画面を、スクリーンショットで共有してください。'); return; }
+    SHOT.blob = b; SHOT.url = URL.createObjectURL(b);
+    var im = new Image(); im.alt = '撮影した画面（長押しでも、コピー・共有できます）'; im.src = SHOT.url; $('shotimg').innerHTML = ''; $('shotimg').appendChild(im); shotMsg('');
+  });
+}
+function shotOpen() { if (SHOT.busy) return; $('shotbar').classList.add('on'); shotMake(false); }
+$('shotbtn').onclick = function (e) { e.preventDefault(); shotOpen(); };
+$('shotmode').onclick = function (e) { var b = e.target.closest ? e.target.closest('button') : null; if (b && !SHOT.busy) shotMake(b.getAttribute('data-m') === 'full'); };
+$('shotcancel').onclick = shotClose;
+$('shotcopy').onclick = function () {
+  if (!SHOT.blob) { shotMsg('先に、画像を作ってください'); return; }
+  try {
+    if (navigator.clipboard && window.ClipboardItem) { navigator.clipboard.write([new ClipboardItem({ 'image/png': SHOT.blob })]).then(function () { shotMsg('コピーしました（貼り付けできます）'); }, function () { shotMsg('コピーできませんでした。「共有」を使うか、画像を長押ししてください'); }); }
+    else shotMsg('この環境では、コピーに対応していません。「共有」を使うか、画像を長押ししてください');
+  } catch (e) { shotMsg('コピーできませんでした。「共有」を使うか、画像を長押ししてください'); }
+};
+$('shotshare').onclick = function () {
+  if (!SHOT.blob) { shotMsg('先に、画像を作ってください'); return; }
+  try {
+    var f = new File([SHOT.blob], 'gunshi-josui.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [f] }) && navigator.share) { navigator.share({ files: [f] }).then(function () { shotMsg('共有しました'); }, function (e) { if (!e || e.name !== 'AbortError') shotMsg('共有できませんでした。画像を長押ししてください'); }); }
+    else shotMsg('この環境では、共有に対応していません。「コピー」か、画像の長押しを使ってください');
+  } catch (e) { shotMsg('共有できませんでした。画像を長押ししてください'); }
+};
+window.addEventListener('pagehide', shotClear);
+
+/* ===== 原本日報（2026-11-25）：日別詳細に、原本の画像を登録・閲覧。端末の中（IndexedDB）に保存＝オフラインでも見られる。写真アプリを通さない（カメラ・ファイル・貼り付け）。同じ画像の重複登録は、しない。画像は、長辺2000px・JPEGに最適化 ===== */
+var OG = { db: null, date: '', side: 'front', cur: null, urls: [] };
+function ogDb(cb) { if (OG.db) return cb(OG.db); try { var q = indexedDB.open('kanbei-trial-orig', 1); q.onupgradeneeded = function () { var d = q.result; if (!d.objectStoreNames.contains('o')) d.createObjectStore('o', { keyPath: 'id' }).createIndex('date', 'date'); }; q.onsuccess = function () { OG.db = q.result; cb(OG.db); }; q.onerror = function () { cb(null); }; } catch (e) { cb(null); } }
+function ogList(date, cb) { ogDb(function (db) { if (!db) return cb([]); var o = [], r = (date ? db.transaction('o').objectStore('o').index('date').openCursor(IDBKeyRange.only(date)) : db.transaction('o').objectStore('o').openCursor()); r.onsuccess = function () { var c = r.result; if (c) { o.push(ogRec(c.value)); c.continue(); } else { o.sort(function (a, b) { return a.ts - b.ts; }); cb(o); } }; r.onerror = function () { cb([]); }; }); }
+function ogRec(v) { if (v && v.buf) v.blob = new Blob([v.buf], { type: 'image/jpeg' }); return v; }
+function ogOp(kind, v, cb) {
+  /* 画像は、ArrayBufferで保存（Blobの保存に対応していない環境でも、確実に保存できる） */
+  if (kind === 'put' && v.blob) { var fr = new FileReader(); fr.onload = function () { var w = {}; for (var k in v) if (k !== 'blob') w[k] = v[k]; w.buf = fr.result; ogOp('put', w, cb); }; fr.onerror = function () { cb(false); }; fr.readAsArrayBuffer(v.blob); return; }
+  ogDb(function (db) { if (!db) return cb(false); try { var t = db.transaction('o', 'readwrite'); t.objectStore('o')[kind](v); t.oncomplete = function () { cb(true); }; t.onerror = t.onabort = function () { cb(false); }; } catch (e) { cb(false); } }); }
+function ogHex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
+function ogPrep(blob, cb) {
+  /* 元の画像のSHA-256（重複の判定）→ 長辺2000px・JPEG(0.82)に最適化 */
+  var rd = new FileReader(); rd.onload = function () {
+    crypto.subtle.digest('SHA-256', rd.result).then(function (h) {
+      var hash = ogHex(h).slice(0, 32), u = URL.createObjectURL(blob), im = new Image();
+      im.onload = function () { var k = Math.min(1, 2000 / Math.max(im.naturalWidth, im.naturalHeight)), w = Math.round(im.naturalWidth * k), hh = Math.round(im.naturalHeight * k), c = document.createElement('canvas'); c.width = w; c.height = hh; var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, w, hh); g.drawImage(im, 0, 0, w, hh); URL.revokeObjectURL(u); c.toBlob(function (b) { cb(b ? { blob: b, hash: hash, w: w, h: hh } : null); }, 'image/jpeg', 0.82); };
+      im.onerror = function () { URL.revokeObjectURL(u); cb(null); }; im.src = u;
+    }, function () { cb(null); });
+  }; rd.onerror = function () { cb(null); }; rd.readAsArrayBuffer(blob);
+}
+function ogAdd(blobs, side, date, done) {
+  /* 複数枚を、順に登録。同じ画像（どの日付でも）は、登録しない */
+  var added = 0, dup = 0, bad = 0, i = 0;
+  ogList('', function (all) { var seen = {}; all.forEach(function (r) { seen[r.hash] = r.date; });
+    (function next() { if (i >= blobs.length) return done(added, dup, bad);
+      ogPrep(blobs[i++], function (p) { if (!p) { bad++; return next(); } if (seen[p.hash]) { dup++; return next(); }
+        seen[p.hash] = date; ogOp('put', { id: date + '|' + p.hash, date: date, side: side, hash: p.hash, mime: 'image/jpeg', blob: p.blob, w: p.w, h: p.h, ts: Date.now() }, function (ok) { if (ok) added++; else bad++; next(); }); }); })(); });
+}
+function ogMsg(t) { $('ogmsg').textContent = t; }
+function ogOpen(date) { OG.date = date; $('ogt').textContent = '原本日報を登録（' + Number(date.slice(5, 7)) + '/' + Number(date.slice(8, 10)) + '）'; ogSide('front'); $('ogbar').classList.add('on'); ogMsg('コピーした画像（スクリーンショットなど）は、「貼り付け」で、写真アプリを通さずに登録できます'); }
+function ogSide(sd) { OG.side = sd; [].forEach.call($('ogside').querySelectorAll('button'), function (b) { b.className = b.getAttribute('data-s') === sd ? 'pri' : ''; }); }
+function ogReport(a, d, b) { ogMsg((a ? a + '枚を登録しました。' : '') + (d ? d + '枚は、すでに登録済みのため、登録しませんでした。' : '') + (b ? b + '枚は、読み込めませんでした。' : '') + (!a && !d && !b ? '画像がありません' : '')); ogRefresh(); }
+function ogPick(list) { var a = []; for (var i = 0; i < list.length; i++) if (list[i] && /^image\//.test(list[i].type || 'image/jpeg')) a.push(list[i]); if (!a.length) { ogMsg('画像が見つかりませんでした'); return; } ogMsg('登録しています…'); ogAdd(a, OG.side, OG.date, ogReport); }
+$('ogside').onclick = function (e) { var b = e.target.closest ? e.target.closest('button') : null; if (b) ogSide(b.getAttribute('data-s')); };
+$('ogcam').onclick = function () { $('ogc').click(); }; $('ogfile').onclick = function () { $('ogf').click(); };
+$('ogc').onchange = $('ogf').onchange = function () { var l = this.files; ogPick(l); this.value = ''; };
+$('ogpaste').onclick = function () {
+  if (!(navigator.clipboard && navigator.clipboard.read)) { ogMsg('この環境では、貼り付けに対応していません。「ファイルを選ぶ」を使ってください'); return; }
+  navigator.clipboard.read().then(function (items) { var ps = []; items.forEach(function (it) { it.types.forEach(function (t) { if (/^image\//.test(t)) ps.push(it.getType(t)); }); }); if (!ps.length) { ogMsg('クリップボードに、画像がありません'); return; } return Promise.all(ps).then(ogPick); }).catch(function () { ogMsg('貼り付けできませんでした（許可が必要です）。「ファイルを選ぶ」を使ってください'); });
+};
+document.addEventListener('paste', function (e) { if (!$('ogbar').classList.contains('on')) return; var f = []; [].forEach.call((e.clipboardData && e.clipboardData.files) || [], function (x) { f.push(x); }); if (f.length) { e.preventDefault(); ogPick(f); } });
+$('ogclose').onclick = function () { $('ogbar').classList.remove('on'); };
+function ogRefresh() { try { var d = $('hf').contentDocument; if (d) ogInject(d); } catch (e) {} }
+function ogInject(d) {
+  /* 日別詳細（nd-日付）に「原本日報」の欄：表面・裏面のサムネイル（保存済みの画像）＋追加 */
+  OG.urls.forEach(function (u) { try { URL.revokeObjectURL(u); } catch (e) {} }); OG.urls = [];
+  [].forEach.call(d.querySelectorAll('section.screen[id^="nd-"]'), function (sc) {
+    var old = sc.querySelector('.kb-og'); if (old) old.parentNode.removeChild(old);
+    var date = sc.id.slice(3), box = d.createElement('div'); box.className = 'kb-live kb-og'; box.innerHTML = '<h3>原本日報</h3><div class="ogg"></div><a class="ogadd" href="#" data-og="add" data-date="' + date + '">＋ 原本を追加（カメラ・ファイル・貼り付け）</a>';
+    var hb = sc.querySelector('.hbar'); sc.insertBefore(box, hb ? hb.nextSibling : sc.firstChild);
+    ogList(date, function (rs) { var g = box.querySelector('.ogg'); if (!rs.length) { g.innerHTML = '<div class="sm">まだ登録がありません</div>'; return; } rs.forEach(function (r) { var u = URL.createObjectURL(r.blob); OG.urls.push(u); var a = d.createElement('a'); a.href = '#'; a.setAttribute('data-og', 'view'); a.setAttribute('data-id', r.id); a.innerHTML = '<img alt="原本日報" src="' + u + '"><span>' + (r.side === 'back' ? '裏面' : '表面') + '</span>'; g.appendChild(a); }); });
+  });
+}
+function ogView(id) {
+  ogDb(function (db) { if (!db) return; var r = db.transaction('o').objectStore('o').get(id); r.onsuccess = function () { var v = ogRec(r.result); if (!v) return; OG.cur = v; var u = URL.createObjectURL(v.blob); OG.urls.push(u);
+    $('ogvt').textContent = Number(v.date.slice(5, 7)) + '/' + Number(v.date.slice(8, 10)) + ' の原本日報（' + (v.side === 'back' ? '裏面' : '表面') + '）'; $('ogvi').className = ''; $('ogvi').innerHTML = '<img alt="原本日報" src="' + u + '">'; $('ogvm').textContent = '画像をタップすると、拡大します'; $('ogview').classList.add('on'); }; });
+}
+$('ogvi').onclick = function () { this.classList.toggle('z'); };
+$('ogvclose').onclick = function () { $('ogview').classList.remove('on'); $('ogvi').innerHTML = ''; OG.cur = null; ogRefresh(); };
+$('ogvcopy').onclick = function () { if (!OG.cur) return; var b = OG.cur.blob; (function () { if (!(navigator.clipboard && window.ClipboardItem)) return Promise.reject(); var c = document.createElement('canvas'), im = $('ogvi').querySelector('img'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); return new Promise(function (res) { c.toBlob(res, 'image/png'); }).then(function (png) { return navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]); }); })().then(function () { $('ogvm').textContent = 'コピーしました'; }, function () { $('ogvm').textContent = 'この環境では、コピーできません。「共有」か、画像の長押しを使ってください'; }); };
+$('ogvshare').onclick = function () { if (!OG.cur) return; try { var f = new File([OG.cur.blob], 'genpon-' + OG.cur.date + '.jpg', { type: 'image/jpeg' }); if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f] }).catch(function () {}); else $('ogvm').textContent = 'この環境では、共有に対応していません。画像の長押しを使ってください'; } catch (e) { $('ogvm').textContent = '共有できませんでした'; } };
+$('ogvdel').onclick = function () { if (!OG.cur) return; if (!confirm('この原本画像を、削除しますか？（元に戻せません）')) return; ogOp('delete', OG.cur.id, function (ok) { $('ogvm').textContent = ok ? '削除しました' : '削除できませんでした'; if (ok) { $('ogvclose').onclick(); } }); };
+$('ogvrep').onclick = function () { if (OG.cur) $('ogr').click(); };
+$('ogr').onchange = function () { var f = this.files[0]; this.value = ''; if (!f || !OG.cur) return; if (!confirm('この原本画像を、選んだ画像に、差し替えますか？（元の画像は、消えます）')) return; var old = OG.cur;
+  ogPrep(f, function (p) { if (!p) { $('ogvm').textContent = '画像を読み込めませんでした'; return; } ogOp('delete', old.id, function () { ogOp('put', { id: old.date + '|' + p.hash, date: old.date, side: old.side, hash: p.hash, mime: 'image/jpeg', blob: p.blob, w: p.w, h: p.h, ts: Date.now() }, function (ok) { $('ogvm').textContent = ok ? '差し替えました' : '差し替えできませんでした'; if (ok) $('ogvclose').onclick(); }); }); }); };
+function ogExport() {
+  /* 原本日報の書き出し（Macへ送る・バックアップ）：画像を、1つのファイルに。写真アプリには、保存しない */
+  ogList('', function (rs) { if (!rs.length) { $('syncnote').textContent = '書き出す原本画像が、ありません'; return; } var out = [], i = 0;
+    (function nx() { if (i >= rs.length) { var txt = JSON.stringify({ kind: 'kanbei-orig-export', v: 1, items: out }), name = '官兵衛原本_' + stamp() + '.json'; try { var f = new File([txt], name, { type: 'application/json' }); if (navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f], title: name }).catch(function () {}); } else { var a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = name; document.body.appendChild(a); a.click(); a.remove(); } $('syncnote').textContent = '原本画像 ' + out.length + '枚を書き出しました。iCloud Drive「官兵衛入力」に保存してください'; } catch (e) { $('syncnote').textContent = '書き出せませんでした'; } return; }
+      var r = rs[i++], fr = new FileReader(); fr.onload = function () { out.push({ date: r.date, side: r.side, hash: r.hash, ts: r.ts, w: r.w, h: r.h, b64: String(fr.result).split(',')[1] }); nx(); }; fr.readAsDataURL(r.blob); })(); });
+}
+if ($('ogexp')) $('ogexp').onclick = ogExport;
 function homeWire() {
   try {
     var f = $('hf'), d = f.contentDocument; if (!d || !d.body || !d.querySelector('.screen')) return;
@@ -901,6 +1078,7 @@ function homeWire() {
     d.addEventListener('click', function (e) {
       var a = e.target && e.target.closest ? e.target.closest('a') : null; if (!a) return;
       var href = a.getAttribute('href') || '';
+      if (a.getAttribute('data-og')) { e.preventDefault(); if (a.getAttribute('data-og') === 'add') ogOpen(a.getAttribute('data-date')); else ogView(a.getAttribute('data-id')); return; }
       if (a.classList.contains('kb-ov')) { e.preventDefault(); openOv(a.getAttribute('data-ov')); return; }                    /* 設定・収益目標・営業戦略の入口カード：アプリ内のページを開く */
       if (a.classList.contains('m-input')) { e.preventDefault(); openOv('iv'); return; }          /* 営業入力：外部リンクではなく、このアプリの中の画面（確認画面は出ない） */
       if (/^[a-z]+:/i.test(href)) { e.preventDefault(); return; }
@@ -1032,7 +1210,7 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V30</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
+</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V31</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
 function inset(side){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding-'+side+':env(safe-area-inset-'+side+')';document.body.appendChild(d);var k='padding'+side.charAt(0).toUpperCase()+side.slice(1),v=parseFloat(getComputedStyle(d)[k])||0;d.parentNode.removeChild(d);return v}
 function unit(u){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:1px;visibility:hidden;height:'+u;document.body.appendChild(d);var v=Math.round(d.getBoundingClientRect().height);d.parentNode.removeChild(d);return v}
 function mm(q){try{return matchMedia(q).matches?'○':'×'}catch(e){return '?'}}
