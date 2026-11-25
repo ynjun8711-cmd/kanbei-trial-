@@ -942,8 +942,9 @@ function shotSvg(full) {
     html.setAttribute('style', 'width:' + W + 'px;height:' + H + 'px;overflow:hidden');
     body.style.cssText += ';overflow:visible!important;height:' + H + 'px;position:relative';
   }
-  var xml = new XMLSerializer().serializeToString(html);
-  return { svg: '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '"><foreignObject x="0" y="0" width="' + W + '" height="' + H + '">' + xml + '</foreignObject></svg>', w: W, h: H };
+  var host = document.createElement('div'); host.innerHTML = '<svg width="' + W + '" height="' + H + '"><foreignObject x="0" y="0" width="' + W + '" height="' + H + '"></foreignObject></svg>';
+  var svgEl = host.firstChild; svgEl.firstChild.appendChild(document.importNode(html, true));
+  return { svg: new XMLSerializer().serializeToString(svgEl), w: W, h: H };
 }
 function shotRender(full, cb) {
   /* 画面→SVG（foreignObject）→画像→canvas→PNG。失敗したら cb(null, 理由) */
@@ -1002,7 +1003,7 @@ function ogList(date, cb) { ogDb(function (db) { if (!db) return cb([]); var o =
 function ogRec(v) { if (v && v.buf) v.blob = new Blob([v.buf], { type: 'image/jpeg' }); return v; }
 function ogOp(kind, v, cb) {
   /* 画像は、ArrayBufferで保存（Blobの保存に対応していない環境でも、確実に保存できる） */
-  if (kind === 'put' && v.blob) { var fr = new FileReader(); fr.onload = function () { var w = {}; for (var k in v) if (k !== 'blob') w[k] = v[k]; w.buf = fr.result; ogOp('put', w, cb); }; fr.onerror = function () { cb(false); }; fr.readAsArrayBuffer(v.blob); return; }
+  if (kind === 'put' && v.blob) { var fr = new FileReader(); fr.onload = function () { var w = {}; for (var k in v) if (k !== 'blob') w[k] = v[k]; w.buf = fr.result; if (w.sha) return ogOp('put', w, cb); crypto.subtle.digest('SHA-256', w.buf).then(function (h) { w.sha = hexs(h); ogOp('put', w, cb); }, function () { cb(false); }); }; fr.onerror = function () { cb(false); }; fr.readAsArrayBuffer(v.blob); return; }
   ogDb(function (db) { if (!db) return cb(false); try { var t = db.transaction('o', 'readwrite'); t.objectStore('o')[kind](v); t.oncomplete = function () { cb(true); }; t.onerror = t.onabort = function () { cb(false); }; } catch (e) { cb(false); } }); }
 function ogHex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
 function ogPrep(blob, cb) {
@@ -1026,7 +1027,7 @@ function ogAdd(blobs, side, date, done) {
 function ogMsg(t) { $('ogmsg').textContent = t; }
 function ogOpen(date) { OG.date = date; $('ogt').textContent = '原本日報を登録（' + Number(date.slice(5, 7)) + '/' + Number(date.slice(8, 10)) + '）'; ogSide('front'); $('ogbar').classList.add('on'); ogMsg('コピーした画像（スクリーンショットなど）は、「貼り付け」で、写真アプリを通さずに登録できます'); }
 function ogSide(sd) { OG.side = sd; [].forEach.call($('ogside').querySelectorAll('button'), function (b) { b.className = b.getAttribute('data-s') === sd ? 'pri' : ''; }); }
-function ogReport(a, d, b) { ogMsg((a ? a + '枚を登録しました。' : '') + (d ? d + '枚は、すでに登録済みのため、登録しませんでした。' : '') + (b ? b + '枚は、読み込めませんでした。' : '') + (!a && !d && !b ? '画像がありません' : '')); ogRefresh(); }
+function ogReport(a, d, b) { if (a) setTimeout(ogSyncRun, 300); ogMsg((a ? a + '枚を登録しました。' : '') + (d ? d + '枚は、すでに登録済みのため、登録しませんでした。' : '') + (b ? b + '枚は、読み込めませんでした。' : '') + (!a && !d && !b ? '画像がありません' : '')); ogRefresh(); }
 function ogPick(list) { var a = []; for (var i = 0; i < list.length; i++) if (list[i] && /^image\//.test(list[i].type || 'image/jpeg')) a.push(list[i]); if (!a.length) { ogMsg('画像が見つかりませんでした'); return; } ogMsg('登録しています…'); ogAdd(a, OG.side, OG.date, ogReport); }
 $('ogside').onclick = function (e) { var b = e.target.closest ? e.target.closest('button') : null; if (b) ogSide(b.getAttribute('data-s')); };
 $('ogcam').onclick = function () { $('ogc').click(); }; $('ogfile').onclick = function () { $('ogf').click(); };
@@ -1055,11 +1056,64 @@ function ogView(id) {
 $('ogvi').onclick = function () { this.classList.toggle('z'); };
 $('ogvclose').onclick = function () { $('ogview').classList.remove('on'); $('ogvi').innerHTML = ''; OG.cur = null; ogRefresh(); };
 $('ogvcopy').onclick = function () { if (!OG.cur) return; var b = OG.cur.blob; (function () { if (!(navigator.clipboard && window.ClipboardItem)) return Promise.reject(); var c = document.createElement('canvas'), im = $('ogvi').querySelector('img'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); return new Promise(function (res) { c.toBlob(res, 'image/png'); }).then(function (png) { return navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]); }); })().then(function () { $('ogvm').textContent = 'コピーしました'; }, function () { $('ogvm').textContent = 'この環境では、コピーできません。「共有」か、画像の長押しを使ってください'; }); };
-$('ogvshare').onclick = function () { if (!OG.cur) return; try { var f = new File([OG.cur.blob], 'genpon-' + OG.cur.date + '.jpg', { type: 'image/jpeg' }); if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f] }).catch(function () {}); else $('ogvm').textContent = 'この環境では、共有に対応していません。画像の長押しを使ってください'; } catch (e) { $('ogvm').textContent = '共有できませんでした'; } };
-$('ogvdel').onclick = function () { if (!OG.cur) return; if (!confirm('この原本画像を、削除しますか？（元に戻せません）')) return; ogOp('delete', OG.cur.id, function (ok) { $('ogvm').textContent = ok ? '削除しました' : '削除できませんでした'; if (ok) { $('ogvclose').onclick(); } }); };
+$('ogvshare').onclick = function () { if (!OG.cur) return; try { var f = new File([OG.cur.blob], 'genpon-' + OG.cur.date + '.' + OG.cur.blob.type.split('/')[1], { type: OG.cur.blob.type }); if (navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f] }).catch(function () {}); else $('ogvm').textContent = 'この環境では、共有に対応していません。画像の長押しを使ってください'; } catch (e) { $('ogvm').textContent = '共有できませんでした'; } };
+$('ogvdel').onclick = function () { if (!OG.cur) return; if (!confirm('この原本画像を、削除しますか？（元に戻せません）')) return; var tomb = []; try { tomb = JSON.parse(lsGet('kbt_ogdel') || '[]'); } catch (e) {} if (OG.cur.sha) { tomb.push(OG.cur.sha); lsSet('kbt_ogdel', JSON.stringify(tomb.slice(-500))); }
+  ogOp('delete', OG.cur.id, function (ok) { $('ogvm').textContent = ok ? '削除しました' : '削除できませんでした'; if (ok) { $('ogvclose').onclick(); } }); };
 $('ogvrep').onclick = function () { if (OG.cur) $('ogr').click(); };
 $('ogr').onchange = function () { var f = this.files[0]; this.value = ''; if (!f || !OG.cur) return; if (!confirm('この原本画像を、選んだ画像に、差し替えますか？（元の画像は、消えます）')) return; var old = OG.cur;
   ogPrep(f, function (p) { if (!p) { $('ogvm').textContent = '画像を読み込めませんでした'; return; } ogOp('delete', old.id, function () { ogOp('put', { id: old.date + '|' + p.hash, date: old.date, side: old.side, hash: p.hash, mime: 'image/jpeg', blob: p.blob, w: p.w, h: p.h, ts: Date.now() }, function (ok) { $('ogvm').textContent = ok ? '差し替えました' : '差し替えできませんでした'; if (ok) $('ogvclose').onclick(); }); }); }); };
+
+/* ===== 原本日報の自動同期（Mac⇄iPhone・暗号化・追加分だけ）：Macの画像は、一覧（暗号化）を見て、まだ無いものだけ取り込む。iPhoneで登録した画像は、暗号化して窓口へ送る（Macが取り込む）。手動の書き出しは、不要。窓口つきの鍵の時だけ動く ===== */
+var OGS = { busy: false };
+function ogNm(label) { return crypto.subtle.sign('HMAC', SY.keys.hk, new TextEncoder().encode(label)).then(function (s) { return hexs(s).slice(0, 32); }); }
+function ogInit(m, body) { var o = { cache: 'no-store', mode: 'cors', credentials: 'omit', headers: { 'Authorization': 'Bearer ' + SY.keys.rt } }; if (m) o.method = m; if (body) o.body = body; return o; }
+function ogDec(buf) {
+  var u = new Uint8Array(buf), enc = new TextEncoder();
+  if (u.length < 40 || String.fromCharCode(u[0], u[1], u[2], u[3]) !== 'KBS1') return Promise.reject('形式');
+  var aad = new Uint8Array(36); aad.set(u.subarray(0, 4), 0); aad.set(enc.encode(SY.keys.name), 4);
+  return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u.subarray(4, 16), additionalData: aad }, SY.keys.ak, u.subarray(16)).then(function (pt) {
+    var dv = new DataView(pt), hl = dv.getUint32(0), head = JSON.parse(new TextDecoder().decode(new Uint8Array(pt, 4, hl))), body = new Uint8Array(pt, 4 + hl, head.len);
+    return crypto.subtle.digest('SHA-256', body).then(function (h) { return hexs(h) === head.sha256 ? body : Promise.reject('ハッシュ'); });
+  });
+}
+function ogEnc(payload) {
+  var enc = new TextEncoder();
+  return crypto.subtle.digest('SHA-256', payload).then(function (h) {
+    var head = enc.encode(JSON.stringify({ v: 1, seq: 1, gen: new Date().toISOString(), len: payload.length, sha256: hexs(h) })), n = 4 + head.length + payload.length, total = Math.ceil(n / 65536) * 65536, body = new Uint8Array(total);
+    new DataView(body.buffer).setUint32(0, head.length); body.set(head, 4); body.set(payload, 4 + head.length);
+    for (var o = 4 + head.length + payload.length; o < total; o += 65536) crypto.getRandomValues(body.subarray(o, Math.min(o + 65536, total)));
+    var iv = crypto.getRandomValues(new Uint8Array(12)), aad = new Uint8Array(36); aad.set(enc.encode('KBS1'), 0); aad.set(enc.encode(SY.keys.name), 4);
+    return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv, additionalData: aad }, SY.keys.ak, body).then(function (ct) { var out = new Uint8Array(16 + ct.byteLength); out.set(enc.encode('KBS1'), 0); out.set(iv, 4); out.set(new Uint8Array(ct), 16); return out; });
+  });
+}
+function ogSyncRun() {
+  var K = SY.keys; if (!K || !K.hk || !K.origin || OGS.busy || navigator.onLine === false) return; OGS.busy = true;
+  var fin = function () { OGS.busy = false; try { ogRefresh(); } catch (e) {} };
+  ogNm('oidx').then(function (nm) {
+    return fetch(K.origin + '/d/' + nm + '.v', ogInit()).then(function (r) { return r.ok ? r.text() : Promise.reject('v'); }).then(function (v) {
+      v = v.trim(); if (v === lsGet('kbt_ogv')) return;
+      return fetch(K.origin + '/d/' + nm + '.bin', ogInit()).then(function (r) { return r.ok ? r.arrayBuffer() : Promise.reject('bin'); }).then(ogDec).then(function (b) { return ogPull(JSON.parse(new TextDecoder().decode(b)).items || [], v); });
+    });
+  }).catch(function (e) { slog('原本の取得：' + (typeof e === 'string' ? e : '失敗')); }).then(ogPush).catch(function () {}).then(fin);
+}
+function ogPull(items, ver) {
+  return new Promise(function (res) { ogList('', function (all) {
+    var have = {}, tomb = {}, bad = 0, i = 0; all.forEach(function (r) { have[r.sha || r.hash] = 1; }); try { JSON.parse(lsGet('kbt_ogdel') || '[]').forEach(function (x) { tomb[x] = 1; }); } catch (e) {}
+    (function nx() { if (i >= items.length) { if (!bad) lsSet('kbt_ogv', ver); return res(); }
+      var it = items[i++]; if (!it || have[it.sha] || tomb[it.sha] || !/^[0-9a-f]{64}$/.test(it.sha) || !/^\d{4}-\d\d-\d\d$/.test(it.date) || (it.side !== 'front' && it.side !== 'back')) return nx();
+      ogNm('orig:' + it.sha).then(function (nm) { return fetch(K_o() + '/d/' + nm + '.bin', ogInit()); }).then(function (r) { return r.ok ? r.arrayBuffer() : Promise.reject('bin'); }).then(ogDec).then(function (raw) {
+        return crypto.subtle.digest('SHA-256', raw).then(function (h) { if (hexs(h) !== it.sha) return Promise.reject('sha'); ogOp('put', { id: it.date + '|' + it.sha.slice(0, 32), date: it.date, side: it.side, hash: it.sha.slice(0, 32), sha: it.sha, src: 'mac', up: true, mime: 'image/jpeg', blob: new Blob([raw], { type: 'image/jpeg' }), w: 0, h: 0, ts: Date.now() }, function () { nx(); }); });
+      }).catch(function () { bad++; nx(); });
+    })(); }); });
+}
+function K_o() { return SY.keys.origin; }
+function ogPush() {
+  return new Promise(function (res) { ogList('', function (all) { var todo = all.filter(function (r) { return !r.up && !r.src && r.sha; }), i = 0;
+    (function nx() { if (i >= todo.length) return res(); var r = todo[i++], meta = new TextEncoder().encode(JSON.stringify({ date: r.date, side: r.side, ts: r.ts, w: r.w, h: r.h })), pl = new Uint8Array(4 + meta.length + r.buf.byteLength);
+      new DataView(pl.buffer).setUint32(0, meta.length); pl.set(meta, 4); pl.set(new Uint8Array(r.buf), 4 + meta.length);
+      Promise.all([ogNm('up:' + r.sha), ogEnc(pl)]).then(function (a) { return fetch(K_o() + '/u/' + a[0] + '.bin', ogInit('PUT', a[1])); }).then(function (x) { if (!x.ok) return Promise.reject(x.status); var w = {}; for (var k in r) if (k !== 'blob') w[k] = r[k]; w.up = true; ogOp('put', w, function () { nx(); }); }).catch(function () { nx(); });
+    })(); }); });
+}
 function ogExport() {
   /* 原本日報の書き出し（Macへ送る・バックアップ）：画像を、1つのファイルに。写真アプリには、保存しない */
   ogList('', function (rs) { if (!rs.length) { $('syncnote').textContent = '書き出す原本画像が、ありません'; return; } var out = [], i = 0;
@@ -1162,7 +1216,7 @@ function syncCheck(force) {
         if (homeShow(rec.html)) { if (first || SY.justKeyed) { SY.justKeyed = false; modeSet('hm'); showScreen(''); } syMsg('更新しました（データ更新：' + genFmt(rec.gen) + '）'); }                   /* 表示に失敗した時は、成功の文を、上書きしない。初めての同期は、司令室を、最初に見せる */
       });
     });
-  }).catch(function (e) { syMsg('最新を取得できませんでした（' + (SY.hasHome ? '保存済みの版を表示します' : '営業入力は、そのまま使えます') + '）：' + (typeof e === 'string' ? e : '通信または復号に失敗'), 1); }).then(function () { SY.busy = false; });
+  }).catch(function (e) { syMsg('最新を取得できませんでした（' + (SY.hasHome ? '保存済みの版を表示します' : '営業入力は、そのまま使えます') + '）：' + (typeof e === 'string' ? e : '通信または復号に失敗'), 1); }).then(function () { SY.busy = false; try { ogSyncRun(); } catch (e) {} });
 }
 function syOriginOk(o) { return /^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.workers\.dev$/.test(o) || /^http:\/\/127\.0\.0\.1:\d+$/.test(o); }
 function syReset() {
@@ -1180,12 +1234,12 @@ function syncSetKey(text, cb) {
   if (origin && !syOriginOk(origin)) { syMsg('窓口のアドレスが、正しくありません', 1); if (cb) cb(false); return; }
   var raw; try { raw = b64b(lines[0] || ''); if (raw.length !== 64) throw 0; } catch (e) { syMsg('鍵の形式が、正しくありません', 1); if (cb) cb(false); return; }
   var C = crypto.subtle;
-  C.importKey('raw', raw.slice(0, 32), 'AES-GCM', false, ['decrypt']).then(function (ak) {
+  C.importKey('raw', raw.slice(0, 32), 'AES-GCM', false, ['decrypt', 'encrypt']).then(function (ak) {
     return C.importKey('raw', raw.slice(32), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']).then(function (hk) {
       return C.sign('HMAC', hk, new TextEncoder().encode('file')).then(function (sig) {
         return C.sign('HMAC', hk, new TextEncoder().encode('read')).then(function (rs) {
           var nm = hexs(sig).slice(0, 32); if (SY.keys && SY.keys.name && SY.keys.name !== nm) syReset();
-          SY.keys = { ak: ak, name: nm, rt: hexs(rs), origin: origin }; SY.justKeyed = true; slog('鍵を取り込みました' + (origin ? '（窓口あり）' : ''));
+          SY.keys = { ak: ak, hk: hk, name: nm, rt: hexs(rs), origin: origin }; SY.justKeyed = true; slog('鍵を取り込みました' + (origin ? '（窓口あり）' : ''));
           idbPut('synckey', SY.keys, function (ok) { syMsg(ok ? '鍵を保存しました。最新を確認します…' : '鍵を保存できませんでした', !ok); if (cb) cb(ok); if (ok) syncCheck(true); });
         });
       });
@@ -1210,7 +1264,7 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V31</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
+</script><div id="bver" style="position:fixed;right:6px;top:2px;z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V32</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
 function inset(side){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding-'+side+':env(safe-area-inset-'+side+')';document.body.appendChild(d);var k='padding'+side.charAt(0).toUpperCase()+side.slice(1),v=parseFloat(getComputedStyle(d)[k])||0;d.parentNode.removeChild(d);return v}
 function unit(u){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:1px;visibility:hidden;height:'+u;document.body.appendChild(d);var v=Math.round(d.getBoundingClientRect().height);d.parentNode.removeChild(d);return v}
 function mm(q){try{return matchMedia(q).matches?'○':'×'}catch(e){return '?'}}
