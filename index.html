@@ -481,14 +481,15 @@ function breakMin(breaks, nowS, fromM, toM) {                                   
   (breaks || []).forEach(function (b) { if (!b || b.x || bizDate(b.s) !== bd) return; var s = bizMin(b.s), e = b.e ? bizMin(b.e) : toM; if (s === null || e === null || e < s) return; var a = Math.max(s, fromM), z = Math.min(e, toM); if (z > a) tot += z - a; });
   return tot;
 }
-function goalCalc(live, nowS, cfg, breaks, tg) {
+function goalCalc(live, nowS, cfg, breaks, tg, exMode) {          /* exMode：金額を税抜で返す（売上＝税込運賃の合計÷1.1・四捨五入／目標＝税抜）。表示は、すべて税抜（2026-11-27）。入力（運賃）は、税込のまま */
   var nowM = bizMin(nowS), sM = hmMin(cfg.start), eM = hmMin(cfg.end); if (sM === null) sM = 420; if (eM === null) eM = 1620; if (eM <= sM) eM += 1440;
-  var cum = 0, cools = tg.map(function (t) { cum += t.inc; return { name: t.name, span: t.span, a: t.a, b: t.b, ex: t.ex, target: t.inc, cum: cum, sales: 0, n: 0, nInput: 0 }; });
+  var cum = 0, cools = tg.map(function (t) { cum += exMode ? t.ex : t.inc; return { name: t.name, span: t.span, a: t.a, b: t.b, ex: t.ex, target: exMode ? t.ex : t.inc, cum: cum, sales: 0, n: 0, nInput: 0 }; });
   var total = 0, nInput = 0;
   live.forEach(function (e) { total += e.fare; var rt = rideTime(e), m = bizMin(rt.t); if (m === null) m = bizMin(e.at); var c = cools[coolOf(m === null ? nowM : m)]; c.sales += e.fare; c.n++; if (rt.src === 'input') { c.nInput++; nInput++; } });
+  if (exMode) { total = pEx(total); cools.forEach(function (c) { c.sales = pEx(c.sales); }); }
   var finalT = cum, cur = coolOf(nowM), brk = breakMin(breaks, nowS, sM, nowM), worked = nowM > sM ? Math.max(0, nowM - sM - brk) : 0;
   var remH = Math.max(0, eM - Math.max(nowM, sM)) / 60;
-  var out = { nowM: nowM, startM: sM, endM: eM, total: total, totalEx: Math.round(total / TAX), cools: cools, cur: cur, beforeStart: nowM < sM, nInput: nInput, nRides: live.length,
+  var out = { nowM: nowM, startM: sM, endM: eM, total: total, totalEx: exMode ? total : Math.round(total / TAX), cools: cools, cur: cur, beforeStart: nowM < sM, nInput: nInput, nRides: live.length,
               breakMin: brk, workedMin: worked, pace: worked >= 30 ? Math.round(total / (worked / 60)) : null, remHours: remH };
   out.final = { target: finalT, diff: total - finalT, need: (total < finalT && remH > 0) ? Math.ceil((finalT - total) / remH) : null };
   var t22 = cools[2].cum, h22 = Math.max(0, cools[2].b - Math.max(nowM, sM)) / 60;
@@ -510,6 +511,13 @@ function hm(min) { min = Math.round(min); return Math.floor(min / 60) + '時間'
 var PACE_COOL_ENDS = [780, 1080, 1320, 1620], PACE_COMPANY = 70000, PACE_PERSONAL = 84000;
 function pHu(x) { return x >= 0 ? Math.floor(x + 0.5) : -Math.floor(-x + 0.5); }
 function pEx(v) { return pHu(v / TAX); }
+var SYPACE = null;
+(function () { try { var t = localStorage.getItem('kbpace'); if (t) { var j = JSON.parse(t); if (j && j.version === 1 && j.weekdays) SYPACE = j; } } catch (e) {} })();
+function paceFromHtml(html) {            /* Macが作った画面（同期で届く）の中の、比較の履歴（コメントで運ぶ）を取り出す。日報を取り込むたびに、Macが作り直す＝基準が、自動で更新される。形が正しくなければ、前のまま */
+  var m = /<!--KBPACE:(\{[^<>]*?\})-->/.exec(html); if (!m) return;
+  try { var j = JSON.parse(m[1]); if (!j || j.version !== 1 || !j.weekdays) return; for (var w = 0; w < 7; w++) if (!Array.isArray(j.weekdays[String(w)])) return;
+    SYPACE = j; try { localStorage.setItem('kbpace', m[1]); } catch (e) {} } catch (e) {}
+}
 function paceLocal() {                                     /* このiPhoneの中の、過去の営業日の記録（営業入力）。Macが無くても、比較の基準になる。訂正・削除は、entries() が反映 */
   var dates = {}, t = today(), out = [];
   S.events.forEach(function (e) { if (e.op === 'add') { var d = bizDate(e.at); if (d) dates[d] = 1; } });
@@ -519,7 +527,7 @@ function paceLocal() {                                     /* このiPhoneの中
   return out;
 }
 function paceData() {
-  var p0 = (PACK && PACK.pace) || window.PACE_FALLBACK || null, p = p0 && p0.version === 1 && p0.weekdays ? p0 : null, loc = [];
+  var p0 = SYPACE || (PACK && PACK.pace) || window.PACE_FALLBACK || null, p = p0 && p0.version === 1 && p0.weekdays ? p0 : null, loc = [];
   try { loc = paceLocal(); } catch (e) {}
   if (!p && !loc.length) return null;
   var q = { version: 1, weekdays: {}, start_tolerance_min: p ? p.start_tolerance_min : 60, min_peers: p ? p.min_peers : 3, unusable: p ? p.unusable : {}, nLocal: 0 };
@@ -532,8 +540,8 @@ function paceCalc(totalIncl, nowS, startM, endM, pace, personalCools, liveRides)
   var nowM = bizMin(nowS), bd = bizDate(nowS), d0 = dtParse(bd + ' 00:00'); if (nowM === null || !d0) return null;
   var wd = (d0.getDay() + 6) % 7, list = (pace && pace.weekdays && pace.weekdays[String(wd)]) || [], tol = (pace && pace.start_tolerance_min) || 60, minPeers = (pace && pace.min_peers) || 3;
   var used = [], exStart = 0; list.forEach(function (h) { if (h[0] === bd) return; if (startM !== null && h[1] !== null && Math.abs(h[1] - startM) > tol) { exStart++; return; } used.push(h); });
-  var unus = (pace && pace.unusable && pace.unusable[String(wd)]) || {}, tex = pEx(totalIncl);
-  var out = { wd: '月火水木金土日'.charAt(wd), nowM: nowM, todayEx: tex, nUsed: used.length, nSame: list.length + (unus.n || 0), excluded: { '降車時刻なし': unus['降車時刻なし'] || 0, '未確定': unus['未確定'] || 0, '明細なし': unus['明細なし'] || 0, '出庫時刻が違う': exStart }, refOnly: used.length < minPeers, avg: null, diff: null, rate: null, best: null, worst: null, cools: [] };
+  var unus = (pace && pace.unusable && pace.unusable[String(wd)]) || {}, tex = pEx(totalIncl), before = startM !== null && nowM < startM;
+  var out = { wd: '月火水木金土日'.charAt(wd), nowM: nowM, todayEx: tex, nUsed: used.length, nSame: list.length + (unus.n || 0), before: before, excluded: (function () { var x = {}; for (var k in unus) if (k !== 'n' && unus[k]) x[k] = unus[k]; if (exStart) x['出庫時刻が違う'] = exStart; return x; })(), refOnly: used.length < minPeers, avg: null, diff: null, rate: null, best: null, worst: null, cools: [] };
   if (used.length) {
     var vals = used.map(function (h) { return pEx(paceCum(h[2], nowM)); }), sum = 0; vals.forEach(function (v) { sum += v; });
     out.avg = pHu(sum / vals.length); out.diff = tex - out.avg; out.rate = out.avg ? pHu(tex / out.avg * 1000) / 10 : null; out.best = Math.max.apply(null, vals); out.worst = Math.min.apply(null, vals);
@@ -544,16 +552,21 @@ function paceCalc(totalIncl, nowS, startM, endM, pace, personalCools, liveRides)
     var av = null; if (used.length) { var ss = 0; used.forEach(function (h) { var q = 0; h[2].forEach(function (r) { if (r[0] >= b[0] && r[0] < b[1]) q += r[1]; }); ss += pEx(q); }); av = pHu(ss / used.length); }
     return { name: ['第1', '第2', '第3', '第4'][i], today: has ? pEx(tsum) : null, avg: av, target: cx[i] }; });
   out.nLocal = (pace && pace.nLocal) || 0;
+  var ci = nowM < 780 ? 0 : (nowM < 1080 ? 1 : (nowM < 1320 ? 2 : 3)), cb = CB[ci], rg = function (rs, a, z) { var q = 0; rs.forEach(function (r) { if (r[0] >= a && r[0] <= z && r[0] < cb[1]) q += r[1]; }); return q; };
+  var cc = { idx: ci, name: ['第1', '第2', '第3', '第4'][ci], today: liveRides ? pEx(rg(liveRides, cb[0], nowM)) : null, avgSame: null, avgEnd: null, diff: null, rate: null, target: cx[ci] };
+  if (used.length && cc.today !== null) { var s1 = 0, s2 = 0; used.forEach(function (h) { s1 += pEx(rg(h[2], cb[0], nowM)); s2 += pEx(rg(h[2], cb[0], 1e9)); }); cc.avgSame = pHu(s1 / used.length); cc.avgEnd = pHu(s2 / used.length); cc.diff = cc.today - cc.avgSame; cc.rate = cc.avgSame ? pHu(cc.today / cc.avgSame * 1000) / 10 : null; }
+  out.curCool = cc;
   var span = Math.max(1, endM - startM), fr = Math.min(1, Math.max(0, (nowM - startM) / span)), remMin = Math.max(0, endM - Math.max(nowM, startM));
   out.tg = { company: PACE_COMPANY, companyRef: pHu(PACE_COMPANY * fr), personal: PACE_PERSONAL, personalRef: pHu(PACE_PERSONAL * fr), remMin: remMin };
   if (personalCools) { var c = 0; out.tg.cools = personalCools.map(function (x) { c += x; return c; }); }
   var lv = 'none', parts = [];
-  if (out.avg !== null) { lv = out.rate !== null && out.rate >= 105 ? 'good' : (out.rate !== null && out.rate < 90 ? 'bad' : 'even');
+  if (before) { lv = 'before'; parts.push('営業開始前です（開始予定 ' + GCFG.start + '）。同時刻の比較と遅れの判定は、営業開始後に行います。'); }
+  else if (out.avg !== null) { lv = out.rate !== null && out.rate >= 105 ? 'good' : (out.rate !== null && out.rate < 90 ? 'bad' : 'even');
     parts.push(out.wd + '曜日の' + out.nUsed + '出番の同時刻平均 ' + yen(out.avg) + '円に対し、' + yen(tex) + '円（' + (out.diff >= 0 ? '＋' : '−') + yen(Math.abs(out.diff)) + '円・' + out.rate + '％）。' + { good: '同じ時刻の過去の平均を、上回っています', even: '同じ時刻の過去の平均と、ほぼ同じです', bad: '同じ時刻の過去の平均を、下回っています' }[lv] + '。');
     if (out.refOnly) parts.push('比較できる出番が' + out.nUsed + '件と少ないので、参考です。'); }
   else parts.push('同じ曜日で、同じ時刻まで比べられる出番が、まだありません（降車時刻のある出番が必要です）。');
   var gap = out.tg.companyRef - tex;
-  parts.push('会社目標（1出番 ' + yen(PACE_COMPANY) + '円）の時間按分の参考値 ' + yen(out.tg.companyRef) + '円に対し、' + (gap <= 0 ? '上回り' : '下回り') + '（' + yen(Math.abs(gap)) + '円）。※途中時刻の目標は、会社の正式な目標ではなく、参考値です。');
+  if (!before) parts.push('会社目標（1出番 ' + yen(PACE_COMPANY) + '円）の時間按分の参考値 ' + yen(out.tg.companyRef) + '円に対し、' + (gap <= 0 ? '上回り' : '下回り') + '（' + yen(Math.abs(gap)) + '円）。※途中時刻の目標は、会社の正式な目標ではなく、参考値です。');
   out.verdict = { level: lv, text: parts.join('') };
   return out;
 }
@@ -564,16 +577,23 @@ function paceCurrent() {
   var lr = []; live.forEach(function (e) { var m = bizMin(e.at); if (m !== null) lr.push([m, e.fare]); });
   return paceCalc(tot, nowS, sM, eM, P, goalTargets().map(function (t) { return t.ex; }), lr);
 }
+function paceQuad(h1, a, b, c, d, cls) {                     /* 4列：平均・実績・差額・比率（一目で比べる） */
+  return '<div class="gt h"><span>' + h1[0] + '</span><span style="text-align:right">' + h1[1] + '</span><span style="text-align:right">' + h1[2] + '</span><span style="text-align:right">' + h1[3] + '</span></div>'
+    + '<div class="gt"><b style="text-align:left">' + a + '</b><b>' + b + '</b><b class="' + cls + '">' + c + '</b><b>' + d + '</b></div>';
+}
 function renderPaceBox() {
   var b = $('pacebox'); if (!b) return; var R = null; try { R = paceCurrent(); } catch (e) {}
-  if (!R) { b.innerHTML = '<div class="note" style="margin:0">戦況：過去の降車時刻つきの実績が、まだありません（営業を記録すると、この端末の中で、比べられるようになります）</div>'; return; }
-  var T = R.tg, ci = R.nowM < 780 ? 0 : (R.nowM < 1080 ? 1 : (R.nowM < 1320 ? 2 : 3)), rh = T.remMin / 60, cn = T.company - R.todayEx, pn = T.personal - R.todayEx;
-  var lv = { good: '好調', even: 'ほぼ平均', bad: '遅れ', none: '比較なし' }[R.verdict.level] + (R.refOnly && R.avg !== null ? '（参考）' : '');
-  var H = '<div class="gr"><span>' + esc(R.wd) + '曜 ' + esc(nowStr().slice(-5)) + '・第' + (ci + 1) + 'クール</span><b class="' + (R.verdict.level === 'good' ? 'pos' : (R.verdict.level === 'bad' ? 'neg' : '')) + '">' + esc(lv) + '</b></div>';
-  H += '<div class="gr"><span>累計（税抜）</span><b>' + yen(R.todayEx) + '円</b></div>';
-  H += '<div class="gr"><span>同時刻の平均比' + (R.avg !== null ? '（' + R.nUsed + '出番）' : '') + '</span><b>' + (R.avg === null ? '—' : '<span class="' + (R.diff >= 0 ? 'pos' : 'neg') + '">' + sg(R.diff) + '</span>　' + R.rate + '％') + '</b></div>';
-  H += '<div class="gr"><span>会社目標 ' + Math.round(R.todayEx / T.company * 1000) / 10 + '％</span><b>' + (cn <= 0 ? '達成' : 'あと' + yen(cn) + '円') + '</b></div>';
-  H += '<div class="gr"><span>個人目標 ' + Math.round(R.todayEx / T.personal * 1000) / 10 + '％</span><b>' + (pn <= 0 ? '達成' : 'あと' + yen(pn) + '円') + '</b></div>';
+  if (!R) { b.innerHTML = '<div class="note" style="margin:0">戦況：比べられる過去の実績が、まだありません</div>'; return; }
+  var T = R.tg, C = R.curCool, rh = T.remMin / 60, cn = T.company - R.todayEx, pn = T.personal - R.todayEx, lvl = R.verdict.level;
+  var lv = { before: '営業開始前', good: '好調', even: 'ほぼ平均', bad: '遅れ', none: '比較なし' }[lvl] + (R.refOnly && R.avg !== null && lvl !== 'before' ? '（参考）' : '');
+  var H = '<div class="gr"><span>' + esc(R.wd) + '曜 ' + esc(nowStr().slice(-5)) + '・第' + (C.idx + 1) + 'クール</span><b class="' + (lvl === 'good' ? 'pos' : (lvl === 'bad' ? 'neg' : '')) + '">' + esc(lv) + '</b></div>';
+  if (lvl === 'before') return void (b.innerHTML = H + '<div class="note" style="margin:0">開始予定 ' + esc(GCFG.start) + '。比較と遅れの判定は、営業開始後に行います</div>');
+  var sd = function (v) { return v === null ? '—' : sg(v); }, yn = function (v) { return v === null ? '—' : yen(v); }, rt = function (v) { return v === null ? '—' : v + '％'; };
+  H += '<div class="note" style="margin:0;padding:0 4px">いままで（税抜・' + esc(nowStr().slice(-5)) + 'まで）</div>' + paceQuad(['同時刻平均', '累計', '差額', '比率'], yn(R.avg), yen(R.todayEx), sd(R.diff), rt(R.rate), R.diff === null ? '' : (R.diff >= 0 ? 'pos' : 'neg'));
+  if (C.idx > 0) H += '<div class="note" style="margin:0;padding:0 4px">第' + (C.idx + 1) + 'クール内</div>' + paceQuad(['同時刻平均', '実績', '差額', '比率'], yn(C.avgSame), C.today === null ? '—' : yen(C.today), sd(C.diff), rt(C.rate), C.diff === null ? '' : (C.diff >= 0 ? 'pos' : 'neg'));
+  H += '<div class="gr"><span>第' + (C.idx + 1) + 'クール終了時</span><b>平均 ' + yn(C.avgEnd) + '／目標 ' + yn(C.target) + '</b></div>';
+  H += '<div class="gr"><span>会社 ' + Math.round(R.todayEx / T.company * 1000) / 10 + '％（' + yen(T.company) + '）</span><b>' + (cn <= 0 ? '達成' : 'あと' + yen(cn) + '円') + '</b></div>';
+  H += '<div class="gr"><span>個人 ' + Math.round(R.todayEx / T.personal * 1000) / 10 + '％（' + yen(T.personal) + '）</span><b>' + (pn <= 0 ? '達成' : 'あと' + yen(pn) + '円') + '</b></div>';
   H += '<div class="gr"><span>残り' + hm(T.remMin) + '</span><b>' + (pn > 0 && rh > 0 ? '必要 ' + yen(Math.ceil(pn / rh)) + '円／時間' : '—') + '</b></div>';
   b.innerHTML = H;
 }
@@ -612,24 +632,24 @@ function paceHtml() {
 function renderGoal() {
   try { renderPaceBox(); } catch (e) {}
   var box = $('goal'); if (!box) return;
-  var d = today(), nowS = nowStr(), live = entries(d).filter(function (e) { return !e.deleted && e.kind !== 'idle'; }), G2 = goalCalc(live, nowS, GCFG, BRK, goalTargets());
+  var d = today(), nowS = nowStr(), live = entries(d).filter(function (e) { return !e.deleted && e.kind !== 'idle'; }), G2 = goalCalc(live, nowS, GCFG, BRK, goalTargets(), true);
   window.LASTG = G2; var cur = G2.cools[G2.cur], H = '';
-  H += '<div class="lab">税込売上（空転を除く）</div><div class="big">' + yen(G2.total) + '<small>円</small></div>';
-  H += '<div class="sub">税抜換算（参考）約' + yen(G2.totalEx) + '円　※目標・会社向けの集計は税抜／この画面の売上・目標・差額は、すべて税込</div>';
+  H += '<div class="lab">税抜営収（空転を除く）</div><div class="big">' + yen(G2.total) + '<small>円</small></div>';
+  H += '<div class="sub">金額は、すべて税抜（乗車料金の入力は、税込のまま）</div>';
   H += '<div class="gh">現在のクール：' + esc(cur.name) + '（' + esc(cur.span) + '）' + (G2.beforeStart ? '　※開始前' : '') + '</div>';
   var pc = cur.target ? Math.round(cur.sales / cur.target * 1000) / 10 : 0;
-  H += '<div class="gr"><span>税込目標</span><b>' + yen(cur.target) + '円</b></div><div class="gr"><span>このクールの実績</span><b>' + yen(cur.sales) + '円</b></div>';
+  H += '<div class="gr"><span>税抜目標</span><b>' + yen(cur.target) + '円</b></div><div class="gr"><span>このクールの実績</span><b>' + yen(cur.sales) + '円</b></div>';
   H += '<div class="gbar' + (pc >= 100 ? ' over' : '') + '"><i style="width:' + Math.min(100, pc) + '%"></i><span>' + pc + '％</span></div>';
   try { H += paceHtml(); } catch (e) {}
-  H += '<div class="gh">クール別</div><div class="gt h"><span>クール</span><span style="text-align:right">税込目標</span><span style="text-align:right">実績</span><span style="text-align:right">達成率</span></div>';
+  H += '<div class="gh">クール別</div><div class="gt h"><span>クール</span><span style="text-align:right">税抜目標</span><span style="text-align:right">実績</span><span style="text-align:right">達成率</span></div>';
   G2.cools.forEach(function (c, i) { var r = c.target ? Math.round(c.sales / c.target * 1000) / 10 : 0;
     H += '<div class="gt' + (i === G2.cur ? ' cur' : '') + '"><span>' + esc(c.name) + '<br>' + esc(c.span) + '</span><b>' + yen(c.target) + '</b><b>' + yen(c.sales) + '</b><b>' + r + '％</b></div>'
-       + '<div class="note" style="margin:0 0 2px;padding:0 4px">終了時の累計目標 ' + yen(c.cum) + '円（税抜 ' + yen(c.ex) + '円）' + (c.nInput ? '／入力時刻で判定 ' + c.nInput + '件' : '') + '</div>'; });
+       + '<div class="note" style="margin:0 0 2px;padding:0 4px">終了時の累計目標 ' + yen(c.cum) + '円' + (c.nInput ? '／入力時刻で判定 ' + c.nInput + '件' : '') + '</div>'; });
   var t = G2.to22;
   H += '<div class="gh">22:00までの目標</div><div class="gr"><span>累計目標（第1〜第3）</span><b>' + yen(t.target) + '円</b></div>';
   H += t.done ? '<div class="gr"><span>22:00時点の実績との差</span><b class="' + (t.diff >= 0 ? 'pos' : 'neg') + '">' + sg(t.diff) + '</b></div>'
               : '<div class="gr"><span>いまの売上との差</span><b class="' + (t.diff >= 0 ? 'pos' : 'neg') + '">' + sg(t.diff) + '</b></div>' + (t.need !== null ? '<div class="gr"><span>22:00まで あと' + hm(t.hoursLeft * 60) + ' で必要</span><b>' + yen(t.need) + '円／時間</b></div>' : '');
-  H += '<div class="gh">最終目標</div><div class="gr"><span>最終目標（第1〜第4・税込）</span><b>' + yen(G2.final.target) + '円</b></div><div class="gr"><span>いまの売上との差</span><b class="' + (G2.final.diff >= 0 ? 'pos' : 'neg') + '">' + sg(G2.final.diff) + '</b></div>';
+  H += '<div class="gh">最終目標</div><div class="gr"><span>最終目標（第1〜第4・税抜）</span><b>' + yen(G2.final.target) + '円</b></div><div class="gr"><span>いまの売上との差</span><b class="' + (G2.final.diff >= 0 ? 'pos' : 'neg') + '">' + sg(G2.final.diff) + '</b></div>';
   H += '<div class="gh">ペース（休憩を除く）</div><div class="gr"><span>稼働時間（記録した休憩 ' + G2.breakMin + '分を除く）</span><b>' + hm(G2.workedMin) + '</b></div>';
   H += '<div class="gr"><span>現在のペース</span><b>' + (G2.pace === null ? '— （30分以上の稼働後）' : yen(G2.pace) + '円／時間') + '</b></div>';
   H += '<div class="gr"><span>終了予定まで 残り' + hm(G2.remHours * 60) + ' で必要</span><b>' + (G2.final.need !== null ? yen(G2.final.need) + '円／時間' : (G2.final.diff >= 0 ? '達成' : '—')) + '</b></div>';
@@ -642,7 +662,7 @@ function renderGoal() {
   H += '<div class="note" style="margin:2px 0">今日の休憩（記録した分）：' + G2.breakMin + '分・' + nb + '回。記録していない休憩は、数えていません' + (nb ? '' : '') + '</div>';
   if (nb) H += '<button class="btn2" type="button" data-a="bcancel" style="min-height:40px">直前の休憩の記録を取り消す</button>';
   H += '<div class="gset"><span>営業開始</span><input type="time" id="gstart" value="' + esc(GCFG.start) + '"><span>終了予定</span><input type="time" id="gend" value="' + esc(GCFG.end) + '"></div>';
-  H += '<div class="note">クールは、実際の乗車時刻で判定します（乗車時刻が不明な乗車だけ、入力時刻）。7:00より前は第1、翌3:00より後は第4に含めます。税込＝税抜×1.1（四捨五入）。</div>';
+  H += '<div class="note">クールは、実際の乗車時刻で判定します（乗車時刻が不明な乗車だけ、入力時刻）。7:00より前は第1、翌3:00より後は第4に含めます。税抜営収＝税込運賃の合計÷1.1（四捨五入）。</div>';
   var ae = document.activeElement; if (ae && box.contains(ae) && ae.tagName === 'INPUT') return;         /* 時刻を入力している間は、作り直さない */
   box.innerHTML = H;
 }
@@ -723,7 +743,7 @@ function nearLine() {
   var L = null;
   if (!LOC) L = { s: 'loc' };
   else if (isMoving(LOC, LOCPREV)) L = { s: 'move' };
-  else { var nowS = nowStr(), G3 = null; try { var live = entries(today()).filter(function (e) { return !e.deleted && e.kind !== 'idle'; }); G3 = goalCalc(live, nowS, GCFG, BRK, goalTargets()); } catch (e) {} var R = nearbyCalc(LOC, nowS, PACK, G3); L = R.note === 'nopack' ? { s: 'nopack' } : (R.items && R.items.length ? { s: 'ok', name: R.items[0].name, km: R.items[0].km } : { s: 'none' }); }
+  else { var nowS = nowStr(), G3 = null; try { var live = entries(today()).filter(function (e) { return !e.deleted && e.kind !== 'idle'; }); G3 = goalCalc(live, nowS, GCFG, BRK, goalTargets(), true); } catch (e) {} var R = nearbyCalc(LOC, nowS, PACK, G3); L = R.note === 'nopack' ? { s: 'nopack' } : (R.items && R.items.length ? { s: 'ok', name: R.items[0].name, km: R.items[0].km } : { s: 'none' }); }
   window.LASTN = L; lineUpdate();
 }
 function lineUpdate() {
@@ -736,7 +756,7 @@ function lineUpdate() {
 }
 function renderNearby0() {
   var box = $('near'); if (!box) return;
-  var nowS = nowStr(), G3 = null; try { var live = entries(today()).filter(function (e) { return !e.deleted && e.kind !== 'idle'; }); G3 = goalCalc(live, nowS, GCFG, BRK, goalTargets()); } catch (e) {}
+  var nowS = nowStr(), G3 = null; try { var live = entries(today()).filter(function (e) { return !e.deleted && e.kind !== 'idle'; }); G3 = goalCalc(live, nowS, GCFG, BRK, goalTargets(), true); } catch (e) {}
   var H = '', moving = isMoving(LOC, LOCPREV);
   if (!LOC) { H += '<div class="sub">' + (LOCERR ? esc(LOCERR) : '現在地を取得しています…') + '</div><button class="btn2" type="button" data-a="locupd">現在地を取得する</button>'; box.innerHTML = H + '<div class="note">位置情報は、この画面の中だけで使い、保存も送信もしません。</div>'; return; }
   var R = nearbyCalc(LOC, nowS, PACK, G3), c = G3 ? G3.cools[G3.cur] : null;
@@ -1293,6 +1313,7 @@ SY.log = [];
 function slog(t) { SY.log.push(nowStr().slice(-5) + ' ' + t); if (SY.log.length > 30) SY.log.shift(); }
 function homeShow(html) {
   /* 戦略分析官の画面を、表示枠に入れる。戻り値：表示を始められたか（検査に通らなければ false） */
+  try { paceFromHtml(html); renderGoal(); } catch (e) {}
   if (!htmlSafe(html)) { slog('表示しない：内容の検査に通らない'); syMsg('表示できない内容のため、表示しませんでした', true); return false; }
   html = html.replace(/<head[^>]*>/i, function (m) { return m + CSP_META; });
   var f = $('hf');
@@ -1400,7 +1421,7 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:max(2px,calc(var(--sat,0px) - 12px));z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V45</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
+</script><div id="bver" style="position:fixed;right:6px;top:max(2px,calc(var(--sat,0px) - 12px));z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V46</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
 function inset(side){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding-'+side+':env(safe-area-inset-'+side+')';document.body.appendChild(d);var k='padding'+side.charAt(0).toUpperCase()+side.slice(1),v=parseFloat(getComputedStyle(d)[k])||0;d.parentNode.removeChild(d);return v}
 function unit(u){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:1px;visibility:hidden;height:'+u;document.body.appendChild(d);var v=Math.round(d.getBoundingClientRect().height);d.parentNode.removeChild(d);return v}
 function mm(q){try{return matchMedia(q).matches?'○':'×'}catch(e){return '?'}}
