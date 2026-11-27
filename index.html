@@ -150,7 +150,7 @@ html.hm body,html.im body{padding:0;min-height:0;overflow:hidden}
 .hpage:not(#iv){display:none}
 html.hm .hpage,html.hm #iv{display:none}
 html.im:not([data-ovp="iv"]) body>#iv{display:none}
-.line{display:block;text-decoration:none;color:#fff;font-size:14px;line-height:1.5;padding:8px 12px!important}.line b{color:#FFE27A}.line .go{float:right;color:#FFE27A;font-weight:800}
+.line{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;text-decoration:none;color:#fff;font-size:14px;line-height:1.4;padding:8px 14px!important}.line .lt{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}.line b{color:#FFE27A}.line .go,.kb-ov .go{color:#FFE27A;font-weight:800;font-size:13px;line-height:1.2;white-space:nowrap}.line .go{flex:none;margin-left:auto}
 html.im[data-ovp="iv"] body>#iv,html.im[data-ovp="mg"] body>#mg,html.im[data-ovp="dg"] body>#dg,html.im[data-ovp="gl"] body>#gl,html.im[data-ovp="nb"] body>#nb{display:block;position:fixed;left:0;right:0;top:var(--sat);bottom:calc(var(--navh,0px) - var(--vfix));overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 12px 20px;background:#040d29;z-index:5}
 html.im .hpage>header.hb:not(#ov),html.im body>#iv>header.hb,html.im body>#mg>header.hb,html.im body>#dg>header.hb,html.im body>#gl>header.hb,html.im body>#nb>header.hb{margin-top:2px;position:static}
 .ibk{display:none;flex:none;align-items:center;justify-content:center;min-width:58px;height:38px;margin:0 0 0 6px;padding:0 6px;font-size:14px;font-weight:700;letter-spacing:.02em;white-space:nowrap;text-decoration:none;border:1.5px solid rgba(255,211,79,.85);border-radius:11px;background:linear-gradient(180deg,#fff8cc,#FFE27A 48%,#f0b830);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;-webkit-text-stroke:.5px rgba(70,35,0,.7);-webkit-tap-highlight-color:rgba(255,211,79,.25)}
@@ -204,7 +204,7 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 <iframe id="hf" sandbox="allow-same-origin allow-scripts" title="戦略分析官" hidden></iframe><div id="sp"></div>
 <div id="iv">
 <header class="hb"><a id="ibk" class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl" data-bt="営業入力">営業入力</span></header>
-<div class="plate" id="pacebox" data-open="gl" role="link" tabindex="0" aria-label="戦況（タップで詳しく）" style="cursor:pointer"><div class="note" style="margin:0">戦況：読み込み中…</div></div>
+<div class="plate" id="pacebox" data-open="gl" role="link" tabindex="0" aria-label="戦況（タップで詳細）" style="cursor:pointer"><div class="note" style="margin:0">戦況：読み込み中…</div></div>
 <p class="note hint">停車中に操作してください（通信・Macは不要です）。</p>
 <div id="savebar">保存の確認中…</div>
 <div class="plate hero"><div class="lab">税込累計（暫定売上）</div><div class="big" id="total">0<small>円</small></div>
@@ -220,13 +220,13 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 <button id="reg" type="button"><i class="pic chk"></i><span>この乗車を登録</span></button>
 <div id="msg" role="status"></div>
 
-<a class="plate line" id="gline" href="#" data-open="gl">売上目標：読み込み中…</a>
-<a class="plate line" id="nline" href="#" data-open="nb">近くの実績：現在地を取得しています…</a>
+<a class="plate line" id="gline" href="#" data-open="gl"><span class="lt">売上目標：読み込み中…</span><span class="go">詳細 ▶</span></a>
+<a class="plate line" id="nline" href="#" data-open="nb"><span class="lt">近くの実績：現在地を取得しています…</span><span class="go">詳細 ▶</span></a>
 <h3>今日の履歴</h3><div class="plate" id="hist"><div class="note">まだありません</div></div>
 <div class="note" id="undoarea"></div>
 <button id="resetbtn" type="button">本日の入力を一括リセット</button>
 <div class="note">リセットしても、履歴はバックアップされ、元に戻せます。</div>
-<a class="plate line" id="mglink" href="#" data-open="mg" style="display:none">同期・バックアップの設定 ▶</a>
+<a class="plate line" id="mglink" href="#" data-open="mg" style="display:none"><span class="lt">同期・バックアップの設定</span><span class="go">詳細 ▶</span></a>
 <div class="foot" aria-hidden="true"></div>
 <div id="ov" hidden><div class="dlg"><b>本日の入力を、一括リセットしますか？</b><p id="ovp"></p><div class="two"><button id="ovy" type="button">リセットする</button><button id="ovn" type="button">やめる</button></div></div></div>
 </div>
@@ -662,13 +662,13 @@ function renderGoal() {
   var t = G2.to22;
   H += '<div class="gh">22:00までの目標</div><div class="gr"><span>累計目標（第1〜第3）</span><b>' + yen(t.target) + '円</b></div>';
   H += t.done ? '<div class="gr"><span>22:00時点の実績との差</span><b class="' + (t.diff >= 0 ? 'pos' : 'neg') + '">' + sg(t.diff) + '</b></div>'
-              : '<div class="gr"><span>いまの売上との差</span><b class="' + (t.diff >= 0 ? 'pos' : 'neg') + '">' + sg(t.diff) + '</b></div>' + (t.need !== null ? '<div class="gr"><span>22:00まで あと' + hm(t.hoursLeft * 60) + ' で必要</span><b>' + yen(t.need) + '円／時間</b></div>' : '');
+              : '<div class="gr"><span>いまの売上との差</span><b class="' + (t.diff >= 0 ? 'pos' : 'neg') + '">' + sg(t.diff) + '</b></div>';
   H += '<div class="gh">最終目標</div><div class="gr"><span>最終目標（第1〜第4・税抜）</span><b>' + yen(G2.final.target) + '円</b></div><div class="gr"><span>いまの売上との差</span><b class="' + (G2.final.diff >= 0 ? 'pos' : 'neg') + '">' + sg(G2.final.diff) + '</b></div>';
   H += '<div class="gh">ペース（休憩を除く）</div><div class="gr"><span>稼働時間（記録した休憩 ' + G2.breakMin + '分を除く）</span><b>' + hm(G2.workedMin) + '</b></div>';
-  H += '<div class="gr"><span>現在のペース</span><b>' + (G2.pace === null ? '— （30分以上の稼働後）' : yen(G2.pace) + '円／時間') + '</b></div>';
-  H += '<div class="gr"><span>終了予定まで 残り' + hm(G2.remHours * 60) + ' で必要</span><b>' + (G2.final.need !== null ? yen(G2.final.need) + '円／時間' : (G2.final.diff >= 0 ? '達成' : '—')) + '</b></div>';
+
+  H += '<div class="gr"><span>終了予定まで</span><b>残り' + hm(G2.remHours * 60) + '</b></div>';
   if (G2.recalc.length) { H += '<div class="gh">残りクールの必要売上（再計算）</div><div class="note" style="margin:0 0 4px;padding:0 4px">終わったクールの実績を引いた残りを、残りのクールに、元の目標の比率で配ります</div>';
-    G2.recalc.forEach(function (c) { H += '<div class="gr"><span>' + esc(c.name) + '（' + esc(c.span) + '）　新しい目標 ' + yen(c.newTarget) + '円</span><b>' + (c.left > 0 ? 'あと' + yen(c.left) + '円' + (c.perHour !== null ? '（' + yen(c.perHour) + '円／時間）' : '') : '達成') + '</b></div>'; }); }
+    G2.recalc.forEach(function (c) { H += '<div class="gr"><span>' + esc(c.name) + '（' + esc(c.span) + '）　新しい目標 ' + yen(c.newTarget) + '円</span><b>' + (c.left > 0 ? 'あと' + yen(c.left) + '円' : '達成') + '</b></div>'; }); }
   var open = null, tmin = 0, nb = 0; BRK.forEach(function (b) { if (b.x || bizDate(b.s) !== d) return; nb++; if (!b.e) open = b; });
   H += '<div class="gh">休憩</div>';
   if (open) { var om = Math.max(0, bizMin(nowS) - bizMin(open.s)); H += '<div class="sub">休憩中：' + esc(open.s.slice(-5)) + '〜（' + om + '分）</div>' + (om >= 120 ? '<div class="warn2">休憩が2時間を超えています。終わっていたら「休憩を終える」を押してください（推測では、終了にしません）</div>' : '') + '<button class="btn2" type="button" data-a="bend">休憩を終える</button>'; }
@@ -763,10 +763,10 @@ function nearLine() {
 function lineUpdate() {
   var g = $('gline'), n = $('nline'), m = $('mglink'); if (!g || !n) return;
   var G = window.LASTG, L = window.LASTN || { s: 'loc' };
-  if (G) { g.innerHTML = '売上目標（税抜）：最終目標まで <b class="' + (G.final.diff >= 0 ? 'pos' : 'neg') + '">' + (G.final.diff >= 0 ? '達成' : 'あと' + yen(-G.final.diff) + '円') + '</b><span class="go">詳しく ▶</span>'; } else g.innerHTML = '売上目標：確認する ▶';
+  if (G) { g.innerHTML = '<span class="lt">売上目標：最終目標まで <b class="' + (G.final.diff >= 0 ? 'pos' : 'neg') + '">' + (G.final.diff >= 0 ? '達成' : 'あと' + yen(-G.final.diff) + '円') + '</b></span><span class="go">詳細 ▶</span>'; } else g.innerHTML = '<span class="lt">売上目標：確認する</span><span class="go">詳細 ▶</span>';
   var t = { loc: '現在地を取得しています', move: '走行中です（停車してから見てください）', nopack: '分析パックを取り込むと表示できます', none: '近くに、過去の実績のある場所が、ありません' }[L.s];
-  n.innerHTML = '近くの実績：' + (L.s === 'ok' ? '<b>' + esc(L.name) + '</b>（現在地から ' + L.km + 'km）' : esc(t)) + '<span class="go">詳しく ▶</span>';
-  if (m) m.style.display = SY.hasHome ? 'none' : 'block';
+  n.innerHTML = '<span class="lt">近くの実績：' + (L.s === 'ok' ? '<b>' + esc(L.name) + '</b>（現在地から ' + L.km + 'km）' : esc(t)) + '</span><span class="go">詳細 ▶</span>';
+  if (m) m.style.display = SY.hasHome ? 'none' : 'flex';
 }
 function renderNearby0() {
   var box = $('near'); if (!box) return;
@@ -778,7 +778,7 @@ function renderNearby0() {
   if (LOC.acc > 500) H += '<div class="warn2">位置の精度が低い状態です（±' + Math.round(LOC.acc) + 'm）。距離は、目安です</div>';
   H += '<div class="sub">いま：' + esc(dtParse(nowS) ? ['日', '月', '火', '水', '木', '金', '土'][dtParse(nowS).getDay()] + '曜 ' + nowS.slice(-5) : '') + '　時間帯 ' + (R.band ? esc(R.band) : '（時間帯の集計の対象外）') + (c ? '　' + esc(c.name) + 'クール 達成率 ' + (c.target ? Math.round(c.sales / c.target * 1000) / 10 : 0) + '％' : '') + '</div>';
   try { var Rq = paceCurrent(); if (Rq) H += '<div class="sub">戦況：' + esc(Rq.verdict.text) + '</div>'; } catch (e) {}
-  if (G3 && G3.final.diff < 0) H += '<div class="sub">最終目標まで あと' + yen(-G3.final.diff) + '円' + (G3.final.need !== null ? '（残り' + hm(G3.remHours * 60) + ' で' + yen(G3.final.need) + '円／時間が必要）' : '') + '</div>';
+  if (G3 && G3.final.diff < 0) H += '<div class="sub">最終目標まで あと' + yen(-G3.final.diff) + '円' + '</div>';
   if (moving) { box.innerHTML = H + '<div class="drv">走行中です。<br>停車してから見てください</div>'; return; }
   if (R.note === 'nopack') H += '<div class="sub">分析パックを取り込むと、近くの実績を表示できます（下の「分析パック」）</div>';
   else if (!R.items.length) H += '<div class="sub">近くに、過去の実績のある場所が、ありません</div>';
@@ -956,7 +956,7 @@ function liveInject() {
       var hb = sc.querySelector('.hbar'), at = hb ? hb.nextSibling : sc.firstChild;
       LIVE_IDS[id].forEach(function (kd) {
         var box;
-        if (kd.indexOf('lk-') === 0) { var L = LK[kd]; box = d.createElement('a'); box.className = 'kb-live kb-ov'; box.setAttribute('href', '#'); box.setAttribute('data-ov', L[0]); box.innerHTML = '<h3>' + L[1] + '</h3><div class="sm">' + L[2] + '</div><span class="go">開く ▶</span>'; }
+        if (kd.indexOf('lk-') === 0) { var L = LK[kd]; box = d.createElement('a'); box.className = 'kb-live kb-ov'; box.setAttribute('href', '#'); box.setAttribute('data-ov', L[0]); box.innerHTML = '<h3>' + L[1] + '</h3><div class="sm">' + L[2] + '</div><span class="go">詳細 ▶</span>'; }
         else { box = d.createElement('div'); box.className = 'kb-live'; box.setAttribute('data-kb-live', kd); box.innerHTML = liveHtml(kd); }
         if (at) sc.insertBefore(box, at); else sc.appendChild(box);
       });
@@ -1435,7 +1435,7 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:max(2px,calc(var(--sat,0px) - 12px));z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V49</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
+</script><div id="bver" style="position:fixed;right:6px;top:max(2px,calc(var(--sat,0px) - 12px));z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V50</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
 function inset(side){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding-'+side+':env(safe-area-inset-'+side+')';document.body.appendChild(d);var k='padding'+side.charAt(0).toUpperCase()+side.slice(1),v=parseFloat(getComputedStyle(d)[k])||0;d.parentNode.removeChild(d);return v}
 function unit(u){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:1px;visibility:hidden;height:'+u;document.body.appendChild(d);var v=Math.round(d.getBoundingClientRect().height);d.parentNode.removeChild(d);return v}
 function mm(q){try{return matchMedia(q).matches?'○':'×'}catch(e){return '?'}}
