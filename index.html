@@ -190,15 +190,25 @@ html.bks body>#hbk::before{content:"";position:fixed;left:0;right:0;top:var(--sa
 html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:var(--bkw,58px);width:var(--bkw,auto);height:var(--bkh,40px);padding:0 10px;font-size:15px;font-weight:700;letter-spacing:.02em;white-space:nowrap;text-decoration:none;color:#FFE27A;border:1.5px solid rgba(255,211,79,.9);border-radius:12px;background:rgba(5,20,78,.94);box-shadow:0 2px 8px rgba(0,0,0,.45);-webkit-tap-highlight-color:rgba(255,211,79,.3)}
 #hbke,#hbkt{display:none}
 #sp{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+
+/* 営業入力の戦況（2026-11-27）：金＝表題／白＝実績／水色＝平均／緑＝会社目標／紫＝個人目標／明るい緑＝プラス／赤＝マイナス */
+#pacebox{--co:#38c172;--me:#b78bff;--avg:#6cc8ff}#pacebox .skh{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-weight:700}#pacebox .skh b{font-size:13px}#pacebox .skmute{color:#9db0d8}
+#pacebox .sklab{font-size:12px;color:#f5c542;margin-top:8px}#pacebox .skbig{font-size:38px;font-weight:800;line-height:1.1;color:#fff}#pacebox .skbig small,#pacebox .skt2 small{font-size:14px;font-weight:400;color:#9db0d8}
+#pacebox .sk2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}#pacebox .skt2{border-radius:14px;padding:7px 9px;border:2px solid}#pacebox .skt2.co{border-color:var(--co);background:rgba(56,193,114,.12)}#pacebox .skt2.me{border-color:var(--me);background:rgba(183,139,255,.12)}
+#pacebox .skt2 span{display:block;font-size:12px}#pacebox .skt2 b{display:block;font-size:26px;line-height:1.15;font-weight:800;text-align:right}#pacebox .skt2 em{display:block;font-style:normal;font-size:10.5px;color:#9db0d8;text-align:right}#pacebox .skt2.co span,#pacebox .skt2.co b{color:var(--co)}#pacebox .skt2.me span,#pacebox .skt2.me b{color:var(--me)}
+#pacebox .skrow{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:14px}#pacebox .skrow b{text-align:right}#pacebox .skrow.sub2{font-size:13px;padding-left:10px;color:#cfd9f2}
+.skavg{color:#6cc8ff}.skco{color:#38c172}.skme{color:#b78bff}.skref{display:inline-block;font-size:10.5px;color:#ffd77a;border:1px solid #ffd77a;border-radius:8px;padding:0 5px}.skno{color:#9db0d8;font-style:italic}.sknote{font-size:11px;color:#9db0d8;margin:4px 0}
+.skt{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}.skt th{color:#f5c542;font-weight:600;font-size:11px;text-align:right;border-bottom:1px solid rgba(245,197,66,.35);padding:3px 2px}.skt th:first-child,.skt td.lb{text-align:left}.skt td{text-align:right;padding:5px 2px;border-bottom:1px solid rgba(255,255,255,.08)}.skt td small{display:block;font-size:10px;color:#9db0d8}.skt tr.cur td{background:rgba(108,200,255,.14)}.skt td.wh{color:#fff;font-weight:700}
 </style></head><body>
 <div id="hbk"><a id="hbkb" href="#" role="button" aria-label="戻る">← 戻る</a><span id="hbke"></span><span id="hbkt"></span></div>
 <iframe id="hf" sandbox="allow-same-origin allow-scripts" title="戦略分析官" hidden></iframe><div id="sp"></div>
 <div id="iv">
 <header class="hb"><a id="ibk" class="ibk" href="#" role="button" aria-label="戻る">← 戻る</a><span class="emb" role="img" aria-label="黒田藤巴"></span><span class="ttl" data-bt="営業入力">営業入力</span></header>
+<div class="plate" id="pacebox" data-open="gl" role="link" tabindex="0" aria-label="戦況（タップで詳しく）" style="cursor:pointer"><div class="note" style="margin:0">戦況：読み込み中…</div></div>
 <p class="note hint">停車中に操作してください（通信・Macは不要です）。</p>
 <div id="savebar">保存の確認中…</div>
 <div class="plate hero"><div class="lab">税込累計（暫定売上）</div><div class="big" id="total">0<small>円</small></div>
- <div class="sub" id="est">概算の税抜営収（参考）約0円</div><div class="sub" id="diff">1出番目標84,000円との差 —</div><div class="sub" id="pct">目標達成率 0％</div></div>
+ <div class="sub" id="est">概算の税抜営収（参考）約0円</div><div class="sub" id="diff">1出番目標84,000円との差 —</div><div class="sub" id="pct" hidden>目標達成率 0％</div></div>
 <div class="g2"><div class="tile"><i class="pic taxi"></i><div class="tc"><span class="lb">GO無線</span><div class="nr"><b id="go">0<small>件</small></b><span class="pill" id="gop">0％</span></div></div></div><div class="tile"><i class="pic hand"></i><div class="tc"><span class="lb">手上げ</span><div class="nr"><b id="te">0<small>件</small></b><span class="pill" id="tep">0％</span></div></div></div>
  <div class="tile"><i class="pic no"></i><div class="tc"><span class="lb">乗車回数<small>（空転を除く）</small></span><div class="nr"><b id="rides">0<small>回</small></b></div></div></div><div class="tile"><i class="pic loop"></i><div class="tc"><span class="lb">空転</span><div class="nr"><b id="idle">0<small>回</small></b><span class="pill" id="idleamt">0円</span></div></div></div></div>
 <div class="kinds" id="kinds"><button type="button" data-k="go" aria-pressed="true"><i class="pic btaxi"></i><span>GO無線</span></button><button type="button" data-k="teage" aria-pressed="false"><i class="pic bman"></i><span>手上げ</span></button><button type="button" data-k="idle" class="idle" aria-pressed="false"><i class="pic bloop"></i><span>空転</span></button></div>
@@ -209,7 +219,7 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 <input id="fare" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="料金（税込・円）" enterkeyhint="done" aria-label="料金">
 <button id="reg" type="button"><i class="pic chk"></i><span>この乗車を登録</span></button>
 <div id="msg" role="status"></div>
-<div class="plate" id="pacebox" data-open="gl" role="link" tabindex="0" aria-label="戦況（タップで詳しく）" style="cursor:pointer"><div class="note" style="margin:0">戦況：読み込み中…</div></div>
+
 <a class="plate line" id="gline" href="#" data-open="gl">売上目標：読み込み中…</a>
 <a class="plate line" id="nline" href="#" data-open="nb">近くの実績：現在地を取得しています…</a>
 <h3>今日の履歴</h3><div class="plate" id="hist"><div class="note">まだありません</div></div>
@@ -578,66 +588,58 @@ function paceCalc(totalIncl, nowS, startM, endM, pace, personalCools, liveRides)
   return out;
 }
 function paceCurrent() {
-  var P = paceData(); if (!P) return null;
+  var P = paceData();                                           /* 履歴が無くても、累計・残額・4クールは、出す（平均は、データなし） */
   var d = today(), nowS = nowStr(), live = entries(d).filter(function (e) { return !e.deleted && e.kind !== 'idle'; }), tot = 0; live.forEach(function (e) { tot += e.fare; });
   var sM = hmMin(GCFG.start), eM = hmMin(GCFG.end); if (sM === null) sM = 420; if (eM === null) eM = 1620; if (eM <= sM) eM += 1440;
   var lr = []; live.forEach(function (e) { var m = bizMin(e.at); if (m !== null) lr.push([m, e.fare]); });
   return paceCalc(tot, nowS, sM, eM, P, goalTargets().map(function (t) { return t.ex; }), lr);
 }
-function paceQuad(h1, a, b, c, d, cls) {                     /* 4列：平均・実績・差額・比率（一目で比べる） */
-  return '<div class="gt h"><span>' + h1[0] + '</span><span style="text-align:right">' + h1[1] + '</span><span style="text-align:right">' + h1[2] + '</span><span style="text-align:right">' + h1[3] + '</span></div>'
-    + '<div class="gt"><b style="text-align:left">' + a + '</b><b>' + b + '</b><b class="' + cls + '">' + c + '</b><b>' + d + '</b></div>';
+function paceCoolIdx(nowM) { return nowM < 780 ? 0 : (nowM < 1080 ? 1 : (nowM < 1320 ? 2 : 3)); }
+function paceRefBadge(n) { return n === 0 ? '<span class="skno">データなし</span>' : (n <= 2 ? '<span class="skref">参考' + n + '出番</span>' : ''); }
+function paceCoolTable(R) {                                  /* 第1〜第4クールを、常に表示：本日（白）・曜日の平均（水色）・個人目標（紫）。いまのクールは、強調 */
+  var cur = paceCoolIdx(R.nowM), H = '<table class="skt"><tr><th>クール</th><th>本日</th><th>' + esc(R.wd) + '曜の平均</th><th>個人目標</th></tr>';
+  R.coolRows.forEach(function (c, i) {
+    H += '<tr' + (i === cur ? ' class="cur"' : '') + '><td class="lb">' + esc(c.name) + (i === cur ? '<small>いま</small>' : '') + '<small>' + ['7:00〜13:00', '13:00〜18:00', '18:00〜22:00', '22:00〜翌3:00'][i] + '</small></td><td class="wh">' + (c.today === null ? '—' : yen(c.today)) + '</td><td class="skavg">' + (c.avg === null ? '—' : yen(c.avg)) + '</td><td class="skme">' + (c.target === null ? '—' : yen(c.target)) + '</td></tr>';
+  });
+  return H + '</table>' + (R.nUsed <= 2 ? '<div class="sknote">' + esc(R.wd) + '曜の平均は、' + (R.nUsed === 0 ? '比べられる出番がなく、数字を補いません（<b>データなし</b>）' : '<b>参考</b>（比べられる出番が' + R.nUsed + '件）') + '。</div>' : '');
 }
 function renderPaceBox() {
   var b = $('pacebox'); if (!b) return; var R = null; try { R = paceCurrent(); } catch (e) {}
-  if (!R) { b.innerHTML = '<div class="note" style="margin:0">戦況：比べられる過去の実績が、まだありません</div>'; return; }
-  var T = R.tg, C = R.curCool, rh = T.remMin / 60, cn = T.company - R.todayEx, pn = T.personal - R.todayEx, lvl = R.verdict.level;
-  var lv = { before: '営業開始前', good: '好調', even: 'ほぼ平均', bad: '遅れ', none: '比較なし' }[lvl] + (R.refOnly && R.avg !== null && lvl !== 'before' ? '（参考）' : '');
-  var dayRow = '<div class="gr"><span>' + esc(R.wd) + '曜の1出番平均' + (R.dayAvg ? '（' + R.dayAvg.n + '出番）' : '') + '</span><b>' + (R.dayAvg ? yen(R.dayAvg.avg) + '円' : '—') + '</b></div>';
-  var H = '<div class="gr"><span>' + esc(R.wd) + '曜 ' + esc(nowStr().slice(-5)) + '・第' + (C.idx + 1) + 'クール</span><b class="' + (lvl === 'good' ? 'pos' : (lvl === 'bad' ? 'neg' : '')) + '">' + esc(lv) + '</b></div>';
-  if (lvl === 'before') return void (b.innerHTML = H + '<div class="note" style="margin:0">開始予定 ' + esc(GCFG.start) + '。比較と遅れの判定は、営業開始後に行います</div>');
-  var sd = function (v) { return v === null ? '—' : sg(v); }, yn = function (v) { return v === null ? '—' : yen(v); }, rt = function (v) { return v === null ? '—' : v + '％'; };
-  H += '<div class="note" style="margin:0;padding:0 4px">いままで（税抜・' + esc(nowStr().slice(-5)) + 'まで）</div>' + paceQuad(['同時刻平均', '累計', '差額', '比率'], yn(R.avg), yen(R.todayEx), sd(R.diff), rt(R.rate), R.diff === null ? '' : (R.diff >= 0 ? 'pos' : 'neg'));
-  if (C.idx > 0) H += '<div class="note" style="margin:0;padding:0 4px">第' + (C.idx + 1) + 'クール内</div>' + paceQuad(['同時刻平均', '実績', '差額', '比率'], yn(C.avgSame), C.today === null ? '—' : yen(C.today), sd(C.diff), rt(C.rate), C.diff === null ? '' : (C.diff >= 0 ? 'pos' : 'neg'));
-  if (R.avg === null) H += '<div class="warn2" style="margin:2px 0">同時刻平均が出せない理由：同じ' + esc(R.wd) + '曜日で、比べられる出番が0件です（同じ曜日の出番 ' + R.nSame + '件' + (function () { var x = []; for (var k in R.excluded) x.push(k + ' ' + R.excluded[k]); return x.length ? '／使えない理由：' + esc(x.join('、')) : ''; })() + '／基準：' + esc(R.src || 'なし') + '）</div>';
-  else if (R.elapsed) H += '<div class="note" style="margin:0;padding:0 4px">出庫時刻が違う出番（' + R.elapsed + '件）を、出庫からの経過時間で揃えた参考値</div>';
-  H += dayRow;
-  H += '<div class="gr"><span>第' + (C.idx + 1) + 'クール終了時</span><b>平均 ' + yn(C.avgEnd) + '／目標 ' + yn(C.target) + '</b></div>';
-  H += '<div class="gr"><span>会社目標 ' + Math.round(R.todayEx / T.company * 1000) / 10 + '％（' + yen(T.company) + '）</span><b>' + (cn <= 0 ? '達成' : 'あと' + yen(cn) + '円') + '</b></div>';
-  H += '<div class="gr"><span>　会社目標への必要営収（残り' + hm(T.remMin) + '）</span><b>' + (cn > 0 && rh > 0 ? yen(Math.ceil(cn / rh)) + '円／時間' : '—') + '</b></div>';
-  H += '<div class="gr"><span>個人目標 ' + Math.round(R.todayEx / T.personal * 1000) / 10 + '％（' + yen(T.personal) + '）</span><b>' + (pn <= 0 ? '達成' : 'あと' + yen(pn) + '円') + '</b></div>';
-  H += '<div class="gr"><span>　個人目標への必要営収（残り' + hm(T.remMin) + '）</span><b>' + (pn > 0 && rh > 0 ? yen(Math.ceil(pn / rh)) + '円／時間' : '—') + '</b></div>';
-  b.innerHTML = H;
+  if (!R) { b.innerHTML = '<div class="sknote" style="margin:0">戦況を計算できませんでした</div>'; return; }
+  var T = R.tg, cn = T.company - R.todayEx, pn = T.personal - R.todayEx, lvl = R.verdict.level;
+  var lv = { before: '営業開始前', good: '同時刻平均を上回る', even: '同時刻平均と同じ', bad: '同時刻平均を下回る', none: '' }[lvl];
+  var H = '<div class="skh"><span>' + esc(R.wd) + '曜 ' + esc(nowStr().slice(-5)) + '・第' + (paceCoolIdx(R.nowM) + 1) + 'クール</span><b class="' + (lvl === 'good' ? 'pos' : (lvl === 'bad' ? 'neg' : 'skmute')) + '">' + esc(lv) + '</b></div>';
+  H += '<div class="sklab">本日の累計営収（税抜）</div><div class="skbig">' + yen(R.todayEx) + '<small>円</small></div>';
+  H += '<div class="sk2"><div class="skt2 co"><span>会社目標まで あと</span><b>' + (cn <= 0 ? '達成' : yen(cn) + '<small>円</small>') + '</b><em>目標 ' + yen(T.company) + '円</em></div><div class="skt2 me"><span>個人目標まで あと</span><b>' + (pn <= 0 ? '達成' : yen(pn) + '<small>円</small>') + '</b><em>目標 ' + yen(T.personal) + '円</em></div></div>';
+  if (lvl === 'before') { b.innerHTML = H + '<div class="sknote">営業開始前です（開始予定 ' + esc(GCFG.start) + '）。比較と遅れの判定は、営業開始後に行います。</div>' + paceCoolTable(R); return; }
+  var dayTo = R.dayAvg ? R.dayAvg.avg - R.todayEx : null;
+  H += '<div class="skrow"><span>' + esc(R.wd) + '曜の1出番平均' + (R.dayAvg ? '（' + R.dayAvg.n + '出番）' : '') + '</span><b class="skavg">' + (R.dayAvg ? yen(R.dayAvg.avg) + '円' : 'データなし') + '</b></div>';
+  if (R.dayAvg) H += '<div class="skrow sub2"><span>その平均まで</span><b>' + (dayTo <= 0 ? '超えています（' + sg(-dayTo) + '円）' : 'あと' + yen(dayTo) + '円') + '</b></div>';
+  H += '<div class="skrow"><span>同時刻の平均' + (R.avg !== null ? '（' + R.nUsed + '出番）' : '') + '</span><b class="skavg">' + (R.avg === null ? 'データなし' : yen(R.avg) + '円') + '</b></div>';
+  if (R.avg !== null) H += '<div class="skrow sub2"><span>同時刻との差額</span><b class="' + (R.diff >= 0 ? 'pos' : 'neg') + '">' + sg(R.diff) + '</b></div>' + (R.refOnly ? '<div class="sknote" style="margin:0">' + paceRefBadge(R.nUsed) + (R.elapsed ? '出庫からの経過時間で揃えた参考値' : '') + '</div>' : '');
+  b.innerHTML = H + paceCoolTable(R);
 }
-function paceHtml() {
-  var P = paceData(), R = paceCurrent(), H = '<div class="gh">戦況の3本柱（同曜日平均・同時刻比較・会社目標）</div>';
-  if (!P || !R) return H + '<div class="note">過去の降車時刻つきの実績を、分析パックで取り込むと、同じ曜日・同じ時刻との比較を表示します（いまは、推測で補わず、表示しません）。会社目標（1出番 ' + yen(PACE_COMPANY) + '円・税抜）との差は、下の目標欄で確認できます。</div>';
+function paceHtml() {                                         /* 売上目標の詳しい画面：比率・達成率・時間単価は、出さない（残額と、平均との差額だけ）。金額は、すべて税抜 */
+  var R = paceCurrent(), H = '<div class="gh">戦況の3本柱（同曜日平均・同時刻比較・会社目標）</div>';
+  if (!R) return H + '<div class="note">戦況を計算できませんでした</div>';
   H += '<div class="sub">売上は、すべて<b>税抜営収</b>（空転を除く）。計上時刻は、降車・精算時刻です</div>';
   H += '<div class="gr"><span>いまの累計（' + esc(nowStr().slice(-5)) + '時点）</span><b>' + yen(R.todayEx) + '円</b></div>';
   if (R.avg !== null) {
-    H += '<div class="gr"><span>同じ' + esc(R.wd) + '曜日の同時刻までの平均</span><b>' + yen(R.avg) + '円</b></div>';
-    H += '<div class="gr"><span>差額</span><b class="' + (R.diff >= 0 ? 'pos' : 'neg') + '">' + sg(R.diff) + '</b></div><div class="gr"><span>比較率</span><b>' + R.rate + '％</b></div>';
+    H += '<div class="gr"><span>同じ' + esc(R.wd) + '曜日の同時刻までの平均</span><b class="skavg">' + yen(R.avg) + '円</b></div>';
+    H += '<div class="gr"><span>差額</span><b class="' + (R.diff >= 0 ? 'pos' : 'neg') + '">' + sg(R.diff) + '</b></div>';
     H += '<div class="gr"><span>同時刻の最高／最低</span><b>' + yen(R.best) + '円／' + yen(R.worst) + '円</b></div>';
-  } else H += '<div class="warn2">同じ曜日で、同じ時刻まで比べられる出番が、ありません</div>';
+  } else H += '<div class="warn2">同じ曜日で、同じ時刻まで比べられる出番が、ありません（データなし）</div>';
   var ex = []; for (var k in R.excluded) if (R.excluded[k]) ex.push(k + ' ' + R.excluded[k] + '件');
-  H += '<div class="note" style="margin:0 0 4px;padding:0 4px">比較対象：同じ' + esc(R.wd) + '曜日 ' + R.nUsed + '出番' + (R.refOnly ? '（件数が少ないため参考）' : '') + (ex.length ? '／使わなかった出番：' + esc(ex.join('、')) : '') + '。未確定・降車時刻なし・出庫時刻が60分を超えて違う出番は、使いません</div>';
-  H += '<div class="gh">各クールの一覧（税抜）</div><div class="gt h"><span>クール</span><span style="text-align:right">本日</span><span style="text-align:right">同曜日平均</span><span style="text-align:right">目標</span></div>';
-  R.coolRows.forEach(function (c, i) { var cur = i === (R.nowM < 780 ? 0 : (R.nowM < 1080 ? 1 : (R.nowM < 1320 ? 2 : 3)));
-    H += '<div class="gt' + (cur ? ' cur' : '') + '"><span>' + esc(c.name) + (cur ? '<br>（いま）' : '') + '</span><b>' + (c.today === null ? '—' : yen(c.today)) + '</b><b>' + (c.avg === null ? '—' : yen(c.avg)) + '</b><b>' + (c.target === null ? '—' : yen(c.target)) + '</b></div>'; });
-  H += '<div class="note" style="margin:0 0 4px;padding:0 4px">「同曜日平均」は、そのクール全体の平均（比べられる出番がある時だけ）。「目標」は本人のクール別目標。この端末で記録した過去の営業日 ' + R.nLocal + '日分も、比較の基準に入れています（訂正は、自動で反映）</div>';
+  H += '<div class="note" style="margin:0 0 4px;padding:0 4px">比較対象：同じ' + esc(R.wd) + '曜日 ' + R.nUsed + '出番' + (R.refOnly ? '（参考）' : '') + (ex.length ? '／使わなかった出番：' + esc(ex.join('、')) : '') + '。この端末で記録した過去の営業日 ' + R.nLocal + '日分も、基準に入れています（訂正は自動で反映）</div>';
+  H += '<div class="gh">各クールの一覧（税抜）</div>' + paceCoolTable(R);
   if (R.cools.length) { H += '<div class="gh">同曜日の各クール終了時の平均（税抜）</div>';
-    R.cools.forEach(function (c, i) { var t = R.tg.cools ? R.tg.cools[i] : null, nm = ['第1', '第2', '第3', '第4'][i] + 'クール終了', tm = ['13:00', '18:00', '22:00', '翌3:00'][i];
-      H += '<div class="gr"><span>' + esc(nm) + '</span><b>' + yen(c.avg) + '円</b></div><div class="note" style="margin:0 0 2px;padding:0 4px">' + esc(tm) + (t ? '／本人の累計目標 ' + yen(t) + '円（平均との差 ' + sg(c.avg - t) + '）' : '') + '</div>'; }); }
-  var T = R.tg, rh = T.remMin / 60, cn = T.company - R.todayEx, pn = T.personal - R.todayEx;
-  H += '<div class="gh">目標に対する進捗（税抜）</div>';
-  H += '<div class="gr"><span>会社目標（正式・1出番）</span><b>' + yen(T.company) + '円</b></div><div class="gr"><span>　達成率</span><b>' + Math.round(R.todayEx / T.company * 1000) / 10 + '％</b></div>';
-  H += '<div class="gr"><span>参考値（時間按分）</span><b>' + yen(T.companyRef) + '円</b></div><div class="note" style="margin:0 0 2px;padding:0 4px">※途中時刻の目標は、会社の正式な目標ではありません。1出番の目標を、時間で割った参考値です</div>';
-  H += '<div class="gr"><span>個人目標（1出番の目安）</span><b>' + yen(T.personal) + '円</b></div><div class="gr"><span>　達成率</span><b>' + Math.round(R.todayEx / T.personal * 1000) / 10 + '％</b></div>';
-  H += '<div class="gh">残り時間と必要営収（税抜）</div><div class="gr"><span>終了予定まで</span><b>残り' + hm(T.remMin) + '</b></div>';
-  H += '<div class="gr"><span>会社目標まで</span><b>' + (cn <= 0 ? '達成' : 'あと' + yen(cn) + '円') + '</b></div>' + (cn > 0 && rh > 0 ? '<div class="gr"><span>　必要なペース</span><b>' + yen(Math.ceil(cn / rh)) + '円／時間</b></div>' : '');
-  H += '<div class="gr"><span>個人目標まで</span><b>' + (pn <= 0 ? '達成' : 'あと' + yen(pn) + '円') + '</b></div>' + (pn > 0 && rh > 0 ? '<div class="gr"><span>　必要なペース</span><b>' + yen(Math.ceil(pn / rh)) + '円／時間</b></div>' : '');
-  if (T.cools) { var ci = R.nowM < 780 ? 0 : (R.nowM < 1080 ? 1 : (R.nowM < 1320 ? 2 : 3)), cend = PACE_COOL_ENDS[ci], need = T.cools[ci] - R.todayEx, hh = Math.max(0, cend - R.nowM) / 60;
-    H += '<div class="gr"><span>このクール終了（' + esc(['13:00', '18:00', '22:00', '翌3:00'][ci]) + '）まで</span><b>残り' + hm(hh * 60) + '</b></div><div class="gr"><span>　本人の累計目標に必要</span><b>' + (need <= 0 ? '達成' : (hh > 0 ? 'あと' + yen(need) + '円（' + yen(Math.ceil(need / hh)) + '円／時間）' : '—')) + '</b></div>'; }
+    R.cools.forEach(function (c, i) { var t = R.tg.cools ? R.tg.cools[i] : null;
+      H += '<div class="gr"><span>' + esc(['第1', '第2', '第3', '第4'][i]) + 'クール終了（' + ['13:00', '18:00', '22:00', '翌3:00'][i] + '）</span><b class="skavg">' + yen(c.avg) + '円</b></div>' + (t ? '<div class="note" style="margin:0 0 2px;padding:0 4px">本人の累計目標 ' + yen(t) + '円（平均との差 ' + sg(c.avg - t) + '）</div>' : ''); }); }
+  var T = R.tg, cn = T.company - R.todayEx, pn = T.personal - R.todayEx;
+  H += '<div class="gh">目標までの残額（税抜）</div>';
+  H += '<div class="gr"><span class="skco">会社目標（正式・1出番 ' + yen(T.company) + '円）まで</span><b class="skco">' + (cn <= 0 ? '達成' : 'あと' + yen(cn) + '円') + '</b></div>';
+  H += '<div class="gr"><span class="skme">個人目標（1出番 ' + yen(T.personal) + '円）まで</span><b class="skme">' + (pn <= 0 ? '達成' : 'あと' + yen(pn) + '円') + '</b></div>';
+  H += '<div class="gr"><span>参考値（時間按分・正式な目標ではありません）</span><b>' + yen(T.companyRef) + '円</b></div>';
   H += '<div class="gh">官兵衛の戦況判断</div><div class="note" style="padding:6px 8px;font-size:inherit">' + esc(R.verdict.text) + '</div>';
   return H;
 }
@@ -761,7 +763,7 @@ function nearLine() {
 function lineUpdate() {
   var g = $('gline'), n = $('nline'), m = $('mglink'); if (!g || !n) return;
   var G = window.LASTG, L = window.LASTN || { s: 'loc' };
-  if (G) { var cu = G.cools[G.cur], pc = cu.target ? Math.round(cu.sales / cu.target * 1000) / 10 : 0; g.innerHTML = '売上目標：<b>' + esc(cu.name) + 'クール ' + pc + '％</b>　最終目標との差 <b class="' + (G.final.diff >= 0 ? 'pos' : 'neg') + '">' + sg(G.final.diff) + '</b><span class="go">詳しく ▶</span>'; } else g.innerHTML = '売上目標：確認する ▶';
+  if (G) { g.innerHTML = '売上目標（税抜）：最終目標まで <b class="' + (G.final.diff >= 0 ? 'pos' : 'neg') + '">' + (G.final.diff >= 0 ? '達成' : 'あと' + yen(-G.final.diff) + '円') + '</b><span class="go">詳しく ▶</span>'; } else g.innerHTML = '売上目標：確認する ▶';
   var t = { loc: '現在地を取得しています', move: '走行中です（停車してから見てください）', nopack: '分析パックを取り込むと表示できます', none: '近くに、過去の実績のある場所が、ありません' }[L.s];
   n.innerHTML = '近くの実績：' + (L.s === 'ok' ? '<b>' + esc(L.name) + '</b>（現在地から ' + L.km + 'km）' : esc(t)) + '<span class="go">詳しく ▶</span>';
   if (m) m.style.display = SY.hasHome ? 'none' : 'block';
@@ -1433,7 +1435,7 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:max(2px,calc(var(--sat,0px) - 12px));z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V47</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
+</script><div id="bver" style="position:fixed;right:6px;top:max(2px,calc(var(--sat,0px) - 12px));z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V49</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
 function inset(side){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding-'+side+':env(safe-area-inset-'+side+')';document.body.appendChild(d);var k='padding'+side.charAt(0).toUpperCase()+side.slice(1),v=parseFloat(getComputedStyle(d)[k])||0;d.parentNode.removeChild(d);return v}
 function unit(u){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:1px;visibility:hidden;height:'+u;document.body.appendChild(d);var v=Math.round(d.getBoundingClientRect().height);d.parentNode.removeChild(d);return v}
 function mm(q){try{return matchMedia(q).matches?'○':'×'}catch(e){return '?'}}
