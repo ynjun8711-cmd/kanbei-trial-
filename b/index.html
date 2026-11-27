@@ -209,6 +209,7 @@ html.bk body>#hbk #hbkb{display:flex;align-items:center;justify-content:center;b
 <input id="fare" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="料金（税込・円）" enterkeyhint="done" aria-label="料金">
 <button id="reg" type="button"><i class="pic chk"></i><span>この乗車を登録</span></button>
 <div id="msg" role="status"></div>
+<div class="plate" id="pacebox" data-open="gl" role="link" tabindex="0" aria-label="戦況（タップで詳しく）" style="cursor:pointer"><div class="note" style="margin:0">戦況：読み込み中…</div></div>
 <a class="plate line" id="gline" href="#" data-open="gl">売上目標：読み込み中…</a>
 <a class="plate line" id="nline" href="#" data-open="nb">近くの実績：現在地を取得しています…</a>
 <h3>今日の履歴</h3><div class="plate" id="hist"><div class="note">まだありません</div></div>
@@ -509,9 +510,25 @@ function hm(min) { min = Math.round(min); return Math.floor(min / 60) + '時間'
 var PACE_COOL_ENDS = [780, 1080, 1320, 1620], PACE_COMPANY = 70000, PACE_PERSONAL = 84000;
 function pHu(x) { return x >= 0 ? Math.floor(x + 0.5) : -Math.floor(-x + 0.5); }
 function pEx(v) { return pHu(v / TAX); }
-function paceData() { var p = (PACK && PACK.pace) || window.PACE_FALLBACK || null; return p && p.version === 1 && p.weekdays ? p : null; }
+function paceLocal() {                                     /* このiPhoneの中の、過去の営業日の記録（営業入力）。Macが無くても、比較の基準になる。訂正・削除は、entries() が反映 */
+  var dates = {}, t = today(), out = [];
+  S.events.forEach(function (e) { if (e.op === 'add') { var d = bizDate(e.at); if (d) dates[d] = 1; } });
+  Object.keys(dates).forEach(function (d) { if (d >= t) return; var d0 = dtParse(d + ' 00:00'), rs = []; if (!d0) return;
+    entries(d).forEach(function (e) { if (e.deleted || e.kind === 'idle') return; var m = bizMin(e.at); if (m !== null) rs.push([m, e.fare]); });
+    if (rs.length) out.push([d, (d0.getDay() + 6) % 7, rs]); });
+  return out;
+}
+function paceData() {
+  var p0 = (PACK && PACK.pace) || window.PACE_FALLBACK || null, p = p0 && p0.version === 1 && p0.weekdays ? p0 : null, loc = [];
+  try { loc = paceLocal(); } catch (e) {}
+  if (!p && !loc.length) return null;
+  var q = { version: 1, weekdays: {}, start_tolerance_min: p ? p.start_tolerance_min : 60, min_peers: p ? p.min_peers : 3, unusable: p ? p.unusable : {}, nLocal: 0 };
+  for (var w = 0; w < 7; w++) q.weekdays[String(w)] = p && p.weekdays[String(w)] ? p.weekdays[String(w)].slice() : [];       /* 日報の履歴（パック）を優先。同じ日が、パックにあれば、iPhoneの記録は使わない（二重に数えない） */
+  loc.forEach(function (h) { var L = q.weekdays[String(h[1])]; if (!L.some(function (x) { return x[0] === h[0]; })) { L.push([h[0], null, h[2]]); q.nLocal++; } });
+  return q;
+}
 function paceCum(rides, upto) { var s = 0; rides.forEach(function (r) { if (r[0] <= upto) s += r[1]; }); return s; }
-function paceCalc(totalIncl, nowS, startM, endM, pace, personalCools) {
+function paceCalc(totalIncl, nowS, startM, endM, pace, personalCools, liveRides) {
   var nowM = bizMin(nowS), bd = bizDate(nowS), d0 = dtParse(bd + ' 00:00'); if (nowM === null || !d0) return null;
   var wd = (d0.getDay() + 6) % 7, list = (pace && pace.weekdays && pace.weekdays[String(wd)]) || [], tol = (pace && pace.start_tolerance_min) || 60, minPeers = (pace && pace.min_peers) || 3;
   var used = [], exStart = 0; list.forEach(function (h) { if (h[0] === bd) return; if (startM !== null && h[1] !== null && Math.abs(h[1] - startM) > tol) { exStart++; return; } used.push(h); });
@@ -522,6 +539,11 @@ function paceCalc(totalIncl, nowS, startM, endM, pace, personalCools) {
     out.avg = pHu(sum / vals.length); out.diff = tex - out.avg; out.rate = out.avg ? pHu(tex / out.avg * 1000) / 10 : null; out.best = Math.max.apply(null, vals); out.worst = Math.min.apply(null, vals);
     out.cools = PACE_COOL_ENDS.map(function (em) { var s = 0; used.forEach(function (h) { s += pEx(paceCum(h[2], em)); }); return { endM: em, avg: pHu(s / used.length) }; });
   }
+  var CB = [[-1e9, 780], [780, 1080], [1080, 1320], [1320, 1e9]], cx = personalCools || [null, null, null, null];
+  out.coolRows = CB.map(function (b, i) { var tsum = 0, has = !!liveRides; (liveRides || []).forEach(function (r) { if (r[0] >= b[0] && r[0] < b[1]) tsum += r[1]; });
+    var av = null; if (used.length) { var ss = 0; used.forEach(function (h) { var q = 0; h[2].forEach(function (r) { if (r[0] >= b[0] && r[0] < b[1]) q += r[1]; }); ss += pEx(q); }); av = pHu(ss / used.length); }
+    return { name: ['第1', '第2', '第3', '第4'][i], today: has ? pEx(tsum) : null, avg: av, target: cx[i] }; });
+  out.nLocal = (pace && pace.nLocal) || 0;
   var span = Math.max(1, endM - startM), fr = Math.min(1, Math.max(0, (nowM - startM) / span)), remMin = Math.max(0, endM - Math.max(nowM, startM));
   out.tg = { company: PACE_COMPANY, companyRef: pHu(PACE_COMPANY * fr), personal: PACE_PERSONAL, personalRef: pHu(PACE_PERSONAL * fr), remMin: remMin };
   if (personalCools) { var c = 0; out.tg.cools = personalCools.map(function (x) { c += x; return c; }); }
@@ -539,7 +561,21 @@ function paceCurrent() {
   var P = paceData(); if (!P) return null;
   var d = today(), nowS = nowStr(), live = entries(d).filter(function (e) { return !e.deleted && e.kind !== 'idle'; }), tot = 0; live.forEach(function (e) { tot += e.fare; });
   var sM = hmMin(GCFG.start), eM = hmMin(GCFG.end); if (sM === null) sM = 420; if (eM === null) eM = 1620; if (eM <= sM) eM += 1440;
-  return paceCalc(tot, nowS, sM, eM, P, goalTargets().map(function (t) { return t.ex; }));
+  var lr = []; live.forEach(function (e) { var m = bizMin(e.at); if (m !== null) lr.push([m, e.fare]); });
+  return paceCalc(tot, nowS, sM, eM, P, goalTargets().map(function (t) { return t.ex; }), lr);
+}
+function renderPaceBox() {
+  var b = $('pacebox'); if (!b) return; var R = null; try { R = paceCurrent(); } catch (e) {}
+  if (!R) { b.innerHTML = '<div class="note" style="margin:0">戦況：過去の降車時刻つきの実績が、まだありません（営業を記録すると、この端末の中で、比べられるようになります）</div>'; return; }
+  var T = R.tg, ci = R.nowM < 780 ? 0 : (R.nowM < 1080 ? 1 : (R.nowM < 1320 ? 2 : 3)), rh = T.remMin / 60, cn = T.company - R.todayEx, pn = T.personal - R.todayEx;
+  var lv = { good: '好調', even: 'ほぼ平均', bad: '遅れ', none: '比較なし' }[R.verdict.level] + (R.refOnly && R.avg !== null ? '（参考）' : '');
+  var H = '<div class="gr"><span>' + esc(R.wd) + '曜 ' + esc(nowStr().slice(-5)) + '・第' + (ci + 1) + 'クール</span><b class="' + (R.verdict.level === 'good' ? 'pos' : (R.verdict.level === 'bad' ? 'neg' : '')) + '">' + esc(lv) + '</b></div>';
+  H += '<div class="gr"><span>累計（税抜）</span><b>' + yen(R.todayEx) + '円</b></div>';
+  H += '<div class="gr"><span>同時刻の平均比' + (R.avg !== null ? '（' + R.nUsed + '出番）' : '') + '</span><b>' + (R.avg === null ? '—' : '<span class="' + (R.diff >= 0 ? 'pos' : 'neg') + '">' + sg(R.diff) + '</span>　' + R.rate + '％') + '</b></div>';
+  H += '<div class="gr"><span>会社目標 ' + Math.round(R.todayEx / T.company * 1000) / 10 + '％</span><b>' + (cn <= 0 ? '達成' : 'あと' + yen(cn) + '円') + '</b></div>';
+  H += '<div class="gr"><span>個人目標 ' + Math.round(R.todayEx / T.personal * 1000) / 10 + '％</span><b>' + (pn <= 0 ? '達成' : 'あと' + yen(pn) + '円') + '</b></div>';
+  H += '<div class="gr"><span>残り' + hm(T.remMin) + '</span><b>' + (pn > 0 && rh > 0 ? '必要 ' + yen(Math.ceil(pn / rh)) + '円／時間' : '—') + '</b></div>';
+  b.innerHTML = H;
 }
 function paceHtml() {
   var P = paceData(), R = paceCurrent(), H = '<div class="gh">戦況の3本柱（同曜日平均・同時刻比較・会社目標）</div>';
@@ -553,6 +589,10 @@ function paceHtml() {
   } else H += '<div class="warn2">同じ曜日で、同じ時刻まで比べられる出番が、ありません</div>';
   var ex = []; for (var k in R.excluded) if (R.excluded[k]) ex.push(k + ' ' + R.excluded[k] + '件');
   H += '<div class="note" style="margin:0 0 4px;padding:0 4px">比較対象：同じ' + esc(R.wd) + '曜日 ' + R.nUsed + '出番' + (R.refOnly ? '（件数が少ないため参考）' : '') + (ex.length ? '／使わなかった出番：' + esc(ex.join('、')) : '') + '。未確定・降車時刻なし・出庫時刻が60分を超えて違う出番は、使いません</div>';
+  H += '<div class="gh">各クールの一覧（税抜）</div><div class="gt h"><span>クール</span><span style="text-align:right">本日</span><span style="text-align:right">同曜日平均</span><span style="text-align:right">目標</span></div>';
+  R.coolRows.forEach(function (c, i) { var cur = i === (R.nowM < 780 ? 0 : (R.nowM < 1080 ? 1 : (R.nowM < 1320 ? 2 : 3)));
+    H += '<div class="gt' + (cur ? ' cur' : '') + '"><span>' + esc(c.name) + (cur ? '<br>（いま）' : '') + '</span><b>' + (c.today === null ? '—' : yen(c.today)) + '</b><b>' + (c.avg === null ? '—' : yen(c.avg)) + '</b><b>' + (c.target === null ? '—' : yen(c.target)) + '</b></div>'; });
+  H += '<div class="note" style="margin:0 0 4px;padding:0 4px">「同曜日平均」は、そのクール全体の平均（比べられる出番がある時だけ）。「目標」は本人のクール別目標。この端末で記録した過去の営業日 ' + R.nLocal + '日分も、比較の基準に入れています（訂正は、自動で反映）</div>';
   if (R.cools.length) { H += '<div class="gh">同曜日の各クール終了時の平均（税抜）</div>';
     R.cools.forEach(function (c, i) { var t = R.tg.cools ? R.tg.cools[i] : null, nm = ['第1', '第2', '第3', '第4'][i] + 'クール終了', tm = ['13:00', '18:00', '22:00', '翌3:00'][i];
       H += '<div class="gr"><span>' + esc(nm) + '</span><b>' + yen(c.avg) + '円</b></div><div class="note" style="margin:0 0 2px;padding:0 4px">' + esc(tm) + (t ? '／本人の累計目標 ' + yen(t) + '円（平均との差 ' + sg(c.avg - t) + '）' : '') + '</div>'; }); }
@@ -570,6 +610,7 @@ function paceHtml() {
   return H;
 }
 function renderGoal() {
+  try { renderPaceBox(); } catch (e) {}
   var box = $('goal'); if (!box) return;
   var d = today(), nowS = nowStr(), live = entries(d).filter(function (e) { return !e.deleted && e.kind !== 'idle'; }), G2 = goalCalc(live, nowS, GCFG, BRK, goalTargets());
   window.LASTG = G2; var cur = G2.cools[G2.cur], H = '';
@@ -689,7 +730,6 @@ function lineUpdate() {
   var g = $('gline'), n = $('nline'), m = $('mglink'); if (!g || !n) return;
   var G = window.LASTG, L = window.LASTN || { s: 'loc' };
   if (G) { var cu = G.cools[G.cur], pc = cu.target ? Math.round(cu.sales / cu.target * 1000) / 10 : 0; g.innerHTML = '売上目標：<b>' + esc(cu.name) + 'クール ' + pc + '％</b>　最終目標との差 <b class="' + (G.final.diff >= 0 ? 'pos' : 'neg') + '">' + sg(G.final.diff) + '</b><span class="go">詳しく ▶</span>'; } else g.innerHTML = '売上目標：確認する ▶';
-  try { var Rp = G ? paceCurrent() : null; if (Rp && Rp.avg !== null) g.innerHTML += '<br>同時刻比（同じ' + esc(Rp.wd) + '曜日の平均）：<b class="' + (Rp.diff >= 0 ? 'pos' : 'neg') + '">' + sg(Rp.diff) + '</b>（' + Rp.rate + '％・' + Rp.nUsed + '出番' + (Rp.refOnly ? '・参考' : '') + '）'; } catch (e) {}
   var t = { loc: '現在地を取得しています', move: '走行中です（停車してから見てください）', nopack: '分析パックを取り込むと表示できます', none: '近くに、過去の実績のある場所が、ありません' }[L.s];
   n.innerHTML = '近くの実績：' + (L.s === 'ok' ? '<b>' + esc(L.name) + '</b>（現在地から ' + L.km + 'km）' : esc(t)) + '<span class="go">詳しく ▶</span>';
   if (m) m.style.display = SY.hasHome ? 'none' : 'block';
@@ -793,7 +833,7 @@ $('packf').onchange = function () {
     var why = packCheck(j); if (why) { $('packmsg').textContent = '取り込めません：' + why + '。いまの分析パックは、そのままです'; inp.value = ''; return; }
     idbPut('pack', j, function (ok) {
       if (!ok) { $('packmsg').textContent = '保存できませんでした。いまの分析パックは、そのままです'; return; }
-      PACK = j; packShow(); $('packmsg').textContent = '取り込みました（営業の記録・バックアップは、変えていません）。圏外でも使えます'; });
+      PACK = j; packShow(); try { render(); } catch (e) {} $('packmsg').textContent = '取り込みました（営業の記録・バックアップは、変えていません）。圏外でも使えます'; });
     inp.value = '';
   };
   r.onerror = function () { $('packmsg').textContent = '読み込めませんでした。いまの分析パックは、そのままです'; inp.value = ''; };
@@ -1360,7 +1400,7 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:max(2px,calc(var(--sat,0px) - 12px));z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V44｜B＝ステータスバー黒</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
+</script><div id="bver" style="position:fixed;right:6px;top:max(2px,calc(var(--sat,0px) - 12px));z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V45｜B＝ステータスバー黒</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
 function inset(side){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding-'+side+':env(safe-area-inset-'+side+')';document.body.appendChild(d);var k='padding'+side.charAt(0).toUpperCase()+side.slice(1),v=parseFloat(getComputedStyle(d)[k])||0;d.parentNode.removeChild(d);return v}
 function unit(u){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:1px;visibility:hidden;height:'+u;document.body.appendChild(d);var v=Math.round(d.getBoundingClientRect().height);d.parentNode.removeChild(d);return v}
 function mm(q){try{return matchMedia(q).matches?'○':'×'}catch(e){return '?'}}
