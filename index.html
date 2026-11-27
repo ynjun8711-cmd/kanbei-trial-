@@ -1288,7 +1288,7 @@ $('synow').onclick = function () { if (!SY.keys) { syMsg('鍵が、まだ入っ�
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') syncCheck(false); });
 window.addEventListener('online', function () { syncCheck(false); });
 window.addEventListener('resize', navMeasure);
-</script><div id="bver" style="position:fixed;right:6px;top:max(2px,calc(var(--sat,0px) - 12px));z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V40</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
+</script><div id="bver" style="position:fixed;right:6px;top:max(2px,calc(var(--sat,0px) - 12px));z-index:99;font:10px/1 -apple-system,sans-serif;color:rgba(255,226,122,.75);pointer-events:none">試験版 V41</div><script>(function(){var b=document.getElementById('bver');if(!b)return;var v=b.textContent;setInterval(function(){try{var m=(document.getElementById('symsg')||{}).textContent||'',t=v+(window.SY&&SY.hasHome?(SY.keys?' ／画面データ 版'+SY.seq:' ／デモ表示'):'');if(m.indexOf('取得できませんでした')>=0&&SY.keys)t+=' ⚠更新できず';b.textContent=t}catch(e){}},1500)})()</script><script>(function(){
 function inset(side){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;visibility:hidden;padding-'+side+':env(safe-area-inset-'+side+')';document.body.appendChild(d);var k='padding'+side.charAt(0).toUpperCase()+side.slice(1),v=parseFloat(getComputedStyle(d)[k])||0;d.parentNode.removeChild(d);return v}
 function unit(u){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:1px;visibility:hidden;height:'+u;document.body.appendChild(d);var v=Math.round(d.getBoundingClientRect().height);d.parentNode.removeChild(d);return v}
 function mm(q){try{return matchMedia(q).matches?'○':'×'}catch(e){return '?'}}
@@ -1305,7 +1305,10 @@ function openLab(){
   h+='<div style="position:fixed;right:0;bottom:env(safe-area-inset-bottom);width:90px;height:6px;background:#3af"></div><div style="position:fixed;right:92px;bottom:env(safe-area-inset-bottom);font-size:10px;color:#3af">bottom:env(下の安全領域)</div>';
   h+='<div id="mlabt" style="position:fixed;left:112px;right:8px;top:56px;background:#0009;padding:6px 8px;border-radius:8px;white-space:pre-wrap;font-size:10.5px;line-height:1.35"></div>';
   h+='<button id="mlabx" style="position:fixed;left:50%;top:66%;transform:translateX(-50%);font-size:16px;padding:10px 22px;border-radius:10px;border:2px solid #ffd400;background:#061a5a;color:#ffd400">閉じる</button>';
+  h+='<button id="mlabv1" style="position:fixed;left:112px;top:74%;font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid #fff;background:#223;color:#fff">viewport-fit=auto にする</button><button id="mlabv2" style="position:fixed;left:112px;top:80%;font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid #fff;background:#223;color:#fff">viewport-fit=cover に戻す</button>';
   o.innerHTML=h;document.body.appendChild(o);
+  function vf(c){var v=document.querySelector('meta[name="viewport"]');if(v)v.content='width=device-width,initial-scale=1,viewport-fit='+c}
+  document.getElementById('mlabv1').onclick=function(){vf('auto')};document.getElementById('mlabv2').onclick=function(){vf('cover')};
   function fill(){var vv=window.visualViewport||{},lines=[];
     lines.push('画面 '+screen.width+'×'+screen.height+'（有効 '+screen.availWidth+'×'+screen.availHeight+'）');
     lines.push('innerWidth×Height '+innerWidth+'×'+innerHeight+'／outer '+outerWidth+'×'+outerHeight);
